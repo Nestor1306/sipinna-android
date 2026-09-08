@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.sipinnaapp.ui.theme.SipinnaAppTheme
+import com.example.sipinnaapp.view.PantallaHome
 import com.example.sipinnaapp.view.PantallaLogin
 import com.example.sipinnaapp.view.PantallaRegistro
 import com.example.sipinnaapp.viewmodel.LoginVM
@@ -49,6 +50,14 @@ fun AppNavegacion(
     // Guardamos en qué pantalla estamos
     var pantallaActual by remember { mutableStateOf("login") }
 
+    // Cuando el login es exitoso, entra directo al Home
+    val estadoLogin by loginVM.estado.collectAsState()
+    LaunchedEffect(estadoLogin.loginExitoso) {
+        if (estadoLogin.loginExitoso) {
+            pantallaActual = "home"
+        }
+    }
+
     when (pantallaActual) {
         "login" -> PantallaLogin(
             vm = loginVM,
@@ -58,6 +67,13 @@ fun AppNavegacion(
         "registro" -> PantallaRegistro(
             vm = registroVM,
             alIrALogin = { pantallaActual = "login" },
+            modifier = modifier
+        )
+        "home" -> PantallaHome(
+            alCerrarSesion = {
+                loginVM.cerrarSesion()
+                pantallaActual = "login"
+            },
             modifier = modifier
         )
     }

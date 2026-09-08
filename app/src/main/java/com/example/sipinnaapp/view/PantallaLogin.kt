@@ -32,17 +32,6 @@ fun PantallaLogin(
         )
     }
 
-    if (estado.loginExitoso) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text("¡Bienvenido!") },
-            text = { Text("Login exitoso") },
-            confirmButton = {
-                TextButton(onClick = {}) { Text("Continuar") }
-            }
-        )
-    }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
