@@ -55,13 +55,15 @@ fun PantallaLogin(
             etiqueta = "Email",
             valor = estado.email,
             alCambiar = { vm.actualizarEmail(it) },
-            teclado = KeyboardType.Email
+            teclado = KeyboardType.Email,
+            modifier = Modifier.fillMaxWidth()
         )
         Espacio(12.dp)
 
         CampoPassword(
             valor = estado.password,
-            alCambiar = { vm.actualizarPassword(it) }
+            alCambiar = { vm.actualizarPassword(it) },
+            modifier = Modifier.fillMaxWidth()
         )
         Espacio(32.dp)
 
