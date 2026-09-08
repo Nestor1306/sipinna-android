@@ -4,10 +4,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 // Configura la conexión con el servidor
-// 10.0.2.2 = localhost de tu Mac visto desde el emulador Android
+// Funciona con: adb reverse tcp:8080 tcp:8080
+// Ese comando hace que localhost del emulador apunte a tu Mac
 object RetrofitClient {
 
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private const val BASE_URL = "http://127.0.0.1:8080/"
 
     val api: ApiService by lazy {
         Retrofit.Builder()

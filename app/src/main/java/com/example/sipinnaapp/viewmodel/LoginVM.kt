@@ -34,12 +34,17 @@ class LoginVM : ViewModel() {
             return
         }
 
-        // Por ahora simulamos login exitoso
+        // simulacion de login exitoso
         // Más adelante aquí llamaremos al API
         _estado.value = _estado.value.copy(error = "", loginExitoso = true)
     }
 
     fun cerrarError() {
         _estado.value = _estado.value.copy(error = "")
+    }
+
+    // Limpia todo y regresa al estado inicial
+    fun cerrarSesion() {
+        _estado.value = EstadoLogin()
     }
 }

@@ -62,16 +62,18 @@ class RegistroVM : ViewModel() {
                         registroExitoso = true
                     )
                 } else {
+                    // Muestra el cuerpo del error que manda el servidor
+                    val detalle = respuesta.errorBody()?.string() ?: ""
                     _estado.value = _estado.value.copy(
                         cargando = false,
-                        error = "Error del servidor: ${respuesta.code()}"
+                        error = "Error ${respuesta.code()}: $detalle"
                     )
                 }
             } catch (e: Exception) {
-                // Si no hay conexión con el servidor
+                // Muestra el error real para poder diagnosticar
                 _estado.value = _estado.value.copy(
                     cargando = false,
-                    error = "No se pudo conectar al servidor"
+                    error = "${e.javaClass.simpleName}: ${e.message}"
                 )
             }
         }
