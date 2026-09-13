@@ -50,6 +50,12 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     // Coroutines: para no bloquear la pantalla mientras espera respuesta
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // Íconos de Material (flecha, lupa, +, x, etc.)
+    implementation("androidx.compose.material:material-icons-extended")
+    // Coil: muestra las fotos de la galería en pantalla
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    // Google Play Services: ubicación GPS del teléfono
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
