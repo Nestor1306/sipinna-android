@@ -67,11 +67,15 @@ fun PantallaLogin(
         )
         Espacio(32.dp)
 
-        Button(
-            onClick = { vm.login() },
-            modifier = Modifier.fillMaxWidth().height(50.dp)
-        ) {
-            Text("Iniciar sesión", fontSize = 16.sp)
+        if (estado.cargando) {
+            CircularProgressIndicator()
+        } else {
+            Button(
+                onClick = { vm.login() },
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text("Iniciar sesión", fontSize = 16.sp)
+            }
         }
 
         Espacio(16.dp)
