@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 // Ese comando hace que localhost del emulador apunte a tu Mac
 object RetrofitClient {
 
-    private const val BASE_URL = "http://127.0.0.1:8080/"
+    private const val BASE_URL = "http://192.168.1.119:3000/auth/citizen/"
 
     val api: ApiService by lazy {
         Retrofit.Builder()
