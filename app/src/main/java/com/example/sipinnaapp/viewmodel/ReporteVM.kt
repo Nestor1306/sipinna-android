@@ -145,7 +145,12 @@ class ReporteVM : ViewModel() {
                     condicion = e.condicion
                 )
 
-                val respuesta = RetrofitClient.api.crearReporte("Bearer $token", peticion)
+                val autorizacion =
+                    if(token.isBlank()) null
+                    else "Bearer $token"
+
+                val respuesta =
+                    RetrofitClient.api.crearReporte(autorizacion,peticion)
 
                 if (respuesta.isSuccessful) {
                     val datos = respuesta.body()

@@ -16,16 +16,20 @@ interface ApiService {
 
     // POST /user → registrar ciudadano
     @POST("user")
-    suspend fun registrarUsuario(@Body usuario: UsuarioRegistro): Response<Any>
+    suspend fun registrarUsuario
+                (@Body usuario: UsuarioRegistro
+    ): Response<Any>
 
     // POST /login → iniciar sesión y obtener el token
     @POST("auth/login")
-    suspend fun login(@Body credenciales: LoginRequest): Response<LoginResponse>
+    suspend fun login(
+        @Body credenciales: LoginRequest
+    ): Response<LoginResponse>
 
     // POST /reporte → crear un reporte (requiere el token del login)
     @POST("reporte")
     suspend fun crearReporte(
-        @Header("Authorization") token: String,
+        @Header("Authorization") token: String?,
         @Body reporte: ReporteRequest
     ): Response<ReporteResponse>
 }
