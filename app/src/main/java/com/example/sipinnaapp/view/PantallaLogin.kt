@@ -12,11 +12,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sipinnaapp.R
 import com.example.sipinnaapp.viewmodel.LoginVM
+import androidx.compose.ui.text.style.TextDecoration
+import com.example.sipinnaapp.ui.theme.GrisTexto
+
 
 @Composable
 fun PantallaLogin(
     vm: LoginVM,
-    alIrARegistro: () -> Unit,     // función para navegar a registro
+    alIrARegistro: () -> Unit, // función para navegar a registro
+    alEntrarAnonimo:() -> Unit,
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
@@ -83,6 +87,15 @@ fun PantallaLogin(
         // Link para ir a registrarse
         TextButton(onClick = alIrARegistro) {
             Text("¿No tienes cuenta? Regístrate")
+        }
+
+        //Para entrar anonimo
+        TextButton(onClick = alEntrarAnonimo) {
+            Text(
+                text = "Entrar sin registrarme",
+                color = GrisTexto,
+                textDecoration = TextDecoration.Underline
+            )
         }
     }
 }

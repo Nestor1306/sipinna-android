@@ -83,6 +83,10 @@ class LoginVM : ViewModel() {
         _estado.value = _estado.value.copy(error = "")
     }
 
+    fun entrarAnonimo() {
+        _estado.value = EstadoLogin(esAnonimo = true)
+    }
+
     // Limpia todo y regresa al estado inicial
     fun cerrarSesion() {
         _estado.value = EstadoLogin()

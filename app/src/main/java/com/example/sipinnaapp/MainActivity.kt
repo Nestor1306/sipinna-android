@@ -77,6 +77,10 @@ fun AppNavegacion(
         "login" -> PantallaLogin(
             vm = loginVM,
             alIrARegistro = { pantallaActual = "registro" },
+            alEntrarAnonimo = {
+                loginVM.entrarAnonimo()
+                pantallaActual = "home"
+            },
             modifier = modifier
         )
         "registro" -> PantallaRegistro(
@@ -85,7 +89,11 @@ fun AppNavegacion(
             modifier = modifier
         )
         "home" -> PantallaHome(
-            reportes = estadoReporte.historial,
+            reportes = if (estadoLogin.esAnonimo) {
+                emptyList()
+            } else {
+                estadoReporte.historial
+            },
             alHacerReporte = {
                 reporteVM.nuevoReporte()
                 pantallaActual = "reporte"

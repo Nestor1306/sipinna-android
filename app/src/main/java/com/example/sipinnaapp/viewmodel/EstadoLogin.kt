@@ -7,5 +7,6 @@ data class EstadoLogin(
     val error: String = "",
     val loginExitoso: Boolean = false,
     val token: String = "",
-    val nombreUsuario: String = ""
+    val nombreUsuario: String = "",
+    val esAnonimo: Boolean = false
 )
