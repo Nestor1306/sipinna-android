@@ -1,25 +1,40 @@
 package com.example.sipinnaapp.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import coil.imageLoader
+import coil.request.ImageRequest
 import com.example.sipinnaapp.model.ReporteRequest
-import com.example.sipinnaapp.model.ReporteResumen
 import com.example.sipinnaapp.network.RetrofitClient
+import com.example.sipinnaapp.network.mensajeDeExcepcion
+import com.example.sipinnaapp.network.mensajeDeRespuesta
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class ReporteVM : ViewModel() {
+// Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
+class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     private val _estado = MutableStateFlow(EstadoReporte())
     val estado: StateFlow<EstadoReporte> = _estado
 
     companion object {
         const val TOTAL_PASOS = 5
-        const val MAX_FOTOS = 3
+        const val MAX_FOTOS = 2              // el diseño permite de 0 a 2 fotos
+        const val LADO_MAXIMO_FOTO = 1600    // pixeles; las fotos se reducen antes de subirlas
 
         // Opciones de la pantalla "Información del niño" (igual que en Figma)
         val OPCIONES_EDAD = listOf(
@@ -154,41 +169,143 @@ class ReporteVM : ViewModel() {
 
                 if (respuesta.isSuccessful) {
                     val datos = respuesta.body()
-                    val folio = datos?.folio ?: "SIN-FOLIO"
 
-                    val resumen = ReporteResumen(
-                        folio = folio,
-                        estado = datos?.estado ?: "en_progreso",
-                        descripcion = e.descripcion.trim(),
-                        direccion = e.direccion.trim()
-                    )
+                    // El reporte ya existe en la base de datos; ahora subimos sus fotos
+                    val fotosFallidas = subirFotos(autorizacion, datos?.id ?: "", e.fotos)
 
                     _estado.value = _estado.value.copy(
                         cargando = false,
-                        folioGenerado = folio,
-                        historial = listOf(resumen) + _estado.value.historial
+                        folioGenerado = datos?.folio ?: "SIN-FOLIO",
+                        estadoGenerado = datos?.estado ?: "",
+                        avisoFotos = if (fotosFallidas > 0) {
+                            "Tu reporte se envió, pero $fotosFallidas foto(s) no se pudieron subir."
+                        } else {
+                            ""
+                        }
                     )
                 } else {
-                    val detalle = respuesta.errorBody()?.string() ?: ""
                     _estado.value = _estado.value.copy(
                         cargando = false,
-                        error = "Error ${respuesta.code()}: $detalle"
+                        error = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
                     )
                 }
             } catch (ex: Exception) {
                 _estado.value = _estado.value.copy(
                     cargando = false,
-                    error = "${ex.javaClass.simpleName}: ${ex.message}"
+                    error = mensajeDeExcepcion(ex)
                 )
             }
         }
+    }
+
+    // --- Subida de fotos ---
+
+    // Sube las fotos una por una al reporte recién creado.
+    // Regresa cuántas fotos NO se pudieron subir (0 = todas bien).
+    private suspend fun subirFotos(autorizacion: String?, reporteId: String, fotos: List<String>): Int {
+        if (fotos.isEmpty()) return 0
+        if (reporteId.isBlank()) return fotos.size   // sin id no sabemos a qué reporte subirlas
+
+        var fallidas = 0
+
+        for ((indice, uri) in fotos.withIndex()) {
+            try {
+                val bytes = prepararFoto(uri)
+                if (bytes == null) {
+                    fallidas++
+                    continue
+                }
+
+                // Armamos el "formulario" con el archivo y su orden (1, 2)
+                val archivo = MultipartBody.Part.createFormData(
+                    "imagen",
+                    "foto${indice + 1}.jpg",
+                    bytes.toRequestBody("image/jpeg".toMediaType())
+                )
+                val orden = (indice + 1).toString().toRequestBody("text/plain".toMediaType())
+
+                val respuesta = RetrofitClient.api.subirImagen(autorizacion, reporteId, archivo, orden)
+
+                if (!respuesta.isSuccessful) {
+                    Log.e("SIPINNA", "Foto ${indice + 1} rechazada: ${respuesta.code()} ${respuesta.errorBody()?.string()}")
+                    fallidas++
+                }
+            } catch (ex: Exception) {
+                Log.e("SIPINNA", "No se pudo subir la foto ${indice + 1}", ex)
+                fallidas++
+            }
+        }
+
+        return fallidas
+    }
+
+    // Lee la foto de la galería, la hace más pequeña y la convierte a JPEG.
+    // Así se sube más rápido y el servidor siempre recibe el mismo formato.
+    private suspend fun prepararFoto(uri: String): ByteArray? {
+        val contexto = getApplication<Application>()
+
+        // Coil (la misma librería que muestra las fotos en pantalla) la carga ya reducida
+        // y además la endereza si estaba girada
+        val peticion = ImageRequest.Builder(contexto)
+            .data(uri)
+            .size(LADO_MAXIMO_FOTO)
+            .allowHardware(false)   // necesario para poder comprimirla después
+            .build()
+
+        val resultado = contexto.imageLoader.execute(peticion)
+        val bitmap = (resultado.drawable as? BitmapDrawable)?.bitmap ?: return null
+
+        // Comprimir es trabajo pesado, lo hacemos fuera del hilo de la pantalla
+        return withContext(Dispatchers.IO) {
+            val salida = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, salida)
+            salida.toByteArray()
+        }
+    }
+
+    // --- Historial desde la base de datos ---
+
+    fun cargarHistorial(token: String) {
+        // Los anónimos no tienen historial
+        if (token.isBlank()) return
+
+        viewModelScope.launch {
+            _estado.value = _estado.value.copy(cargandoHistorial = true, errorHistorial = "")
+
+            try {
+                val respuesta = RetrofitClient.api.misReportes("Bearer $token")
+
+                if (respuesta.isSuccessful) {
+                    _estado.value = _estado.value.copy(
+                        cargandoHistorial = false,
+                        historial = respuesta.body() ?: emptyList()
+                    )
+                } else {
+                    _estado.value = _estado.value.copy(
+                        cargandoHistorial = false,
+                        errorHistorial = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
+                    )
+                }
+            } catch (ex: Exception) {
+                _estado.value = _estado.value.copy(
+                    cargandoHistorial = false,
+                    errorHistorial = mensajeDeExcepcion(ex)
+                )
+            }
+        }
+    }
+
+    // Al cerrar sesión se borra todo, para que otro usuario no vea estos reportes
+    fun limpiarTodo() {
+        _estado.value = EstadoReporte()
     }
 
     fun cerrarError() {
         _estado.value = _estado.value.copy(error = "")
     }
 
-    // Limpia el formulario pero conserva el historial de reportes enviados
+    // Limpia el formulario pero conserva el historial de reportes enviados.
+    // (Al volver al Home, el historial se vuelve a pedir a la base de datos.)
     fun nuevoReporte() {
         _estado.value = EstadoReporte(historial = _estado.value.historial)
     }

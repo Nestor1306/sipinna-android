@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.example.sipinnaapp.model.UsuarioRegistro
 import com.example.sipinnaapp.network.RetrofitClient
-import org.json.JSONObject
+import com.example.sipinnaapp.network.mensajeDeExcepcion
+import com.example.sipinnaapp.network.mensajeDeRespuesta
 
 class RegistroVM : ViewModel() {
 
@@ -101,22 +102,16 @@ class RegistroVM : ViewModel() {
                         registroExitoso = true
                     )
                 } else {
-                    // El backend responde {"error": "mensaje"}, sacamos solo el mensaje
-                    val cuerpo = respuesta.errorBody()?.string() ?: ""
-                    val mensaje = try {
-                        JSONObject(cuerpo).getString("error")
-                    } catch (e: Exception) {
-                        "Error ${respuesta.code()}: $cuerpo"
-                    }
+                    // Si el backend manda {"error": "mensaje"} se muestra ese mensaje
                     _estado.value = _estado.value.copy(
                         cargando = false,
-                        error = mensaje
+                        error = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
                     )
                 }
             } catch (e: Exception) {
                 _estado.value = _estado.value.copy(
                     cargando = false,
-                    error = "${e.javaClass.simpleName}: ${e.message}"
+                    error = mensajeDeExcepcion(e)
                 )
             }
         }

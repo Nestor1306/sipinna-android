@@ -41,7 +41,10 @@ fun PantallaRegistro(
             title = { Text("¡Registro exitoso!") },
             text = { Text("Bienvenido, ${estado.nombre}") },
             confirmButton = {
-                TextButton(onClick = { vm.reiniciar() }) { Text("Continuar") }
+                TextButton(onClick = {
+                    vm.reiniciar()
+                    alIrALogin()   // después de registrarse, pasa a iniciar sesión
+                }) { Text("Continuar") }
             }
         )
     }

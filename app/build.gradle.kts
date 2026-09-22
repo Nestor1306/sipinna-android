@@ -49,6 +49,8 @@ dependencies {
     // Retrofit: hace las llamadas HTTP al backend Go
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // OkHttp: lo usamos para mandar las fotos como archivo (multipart)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // Coroutines: para no bloquear la pantalla mientras espera respuesta
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     // Íconos de Material (flecha, lupa, +, x, etc.)

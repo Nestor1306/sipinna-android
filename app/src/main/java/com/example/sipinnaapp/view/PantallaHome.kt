@@ -32,6 +32,9 @@ import com.example.sipinnaapp.ui.theme.*
 @Composable
 fun PantallaHome(
     reportes: List<ReporteResumen>,
+    cargando: Boolean,
+    mensajeError: String,
+    esAnonimo: Boolean,
     alHacerReporte: () -> Unit,
     alIrAPerfil: () -> Unit,
     modifier: Modifier = Modifier
@@ -41,8 +44,8 @@ fun PantallaHome(
     // Filtra las tarjetas por lo que se escribe en el buscador
     val reportesFiltrados = if (busqueda.isBlank()) reportes
     else reportes.filter {
-        it.direccion.contains(busqueda, ignoreCase = true) ||
-        it.folio.contains(busqueda, ignoreCase = true)
+        (it.direccion ?: "").contains(busqueda, ignoreCase = true) ||
+        (it.folio ?: "").contains(busqueda, ignoreCase = true)
     }
 
     Box(
@@ -100,7 +103,16 @@ fun PantallaHome(
             Espacio(24.dp)
 
             // Tarjetas de reportes
-            if (reportesFiltrados.isEmpty()) {
+            if (cargando && reportes.isEmpty()) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    CircularProgressIndicator(color = Teal)
+                }
+            } else if (reportesFiltrados.isEmpty()) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -108,8 +120,12 @@ fun PantallaHome(
                         .weight(1f)
                 ) {
                     Text(
-                        text = if (reportes.isEmpty()) "Aún no tienes reportes.\nToca + para crear el primero."
-                               else "No hay reportes que coincidan.",
+                        text = when {
+                            esAnonimo -> "Estás sin registrarte.\nPuedes hacer reportes, pero no ver su estado."
+                            mensajeError.isNotEmpty() -> mensajeError
+                            reportes.isEmpty() -> "Aún no tienes reportes.\nToca + para crear el primero."
+                            else -> "No hay reportes que coincidan."
+                        },
                         fontSize = 13.sp,
                         color = GrisTexto,
                         textAlign = TextAlign.Center
@@ -185,27 +201,11 @@ private val FormaDiagonal = GenericShape { size, _ ->
 // Tarjeta de un reporte: mapa a la izquierda, estado y detalle a la derecha
 @Composable
 fun TarjetaReporte(reporte: ReporteResumen) {
-    val titulo: String
-    val colorTitulo: Color
-    val detalle: String
-
-    when (reporte.estado) {
-        "confirmado" -> {
-            titulo = "Reporte confirmado"
-            colorTitulo = VerdeConfirmado
-            detalle = ""
-        }
-        "no_apto" -> {
-            titulo = "No apto"
-            colorTitulo = RojoNoApto
-            detalle = "Tu reporte no pudo ser validado. La información proporcionada no fue suficiente para confirmarlo."
-        }
-        else -> {
-            titulo = "Reporte en progreso"
-            colorTitulo = AmarilloProgreso
-            detalle = "Tu reporte está en revisión. Estamos verificando la información antes de continuar."
-        }
-    }
+    // Texto y color según el estado real guardado en la base de datos
+    val info = infoDeEstado(reporte.estado)
+    val titulo = info.titulo
+    val colorTitulo = info.color
+    val detalle = info.detalle
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -264,9 +264,9 @@ fun TarjetaReporte(reporte: ReporteResumen) {
             }
 
             // Los confirmados muestran su folio abajo a la derecha
-            if (reporte.estado == "confirmado") {
+            if (info.detalle.isEmpty()) {
                 Text(
-                    text = reporte.folio,
+                    text = reporte.folio ?: "",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,

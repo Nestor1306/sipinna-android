@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.sipinnaapp.ui.theme.*
 import com.example.sipinnaapp.viewmodel.ReporteVM
@@ -53,15 +54,15 @@ fun PantallaFotos(
 
         Espacio(20.dp)
 
-        // Cuadrícula de 2 columnas: fotos elegidas + cuadro para agregar
+        // Una fila de 2 cuadros: las fotos elegidas + el cuadro para agregar (máximo 2 fotos)
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            estado.fotos.take(2).forEach { uri ->
+            estado.fotos.forEach { uri ->
                 TarjetaFoto(uri = uri, alQuitar = { vm.quitarFoto(uri) }, modifier = Modifier.weight(1f))
             }
-            if (estado.fotos.size < 2) {
+            if (estado.fotos.size < ReporteVM.MAX_FOTOS) {
                 CuadroAgregarFoto(
                     alPresionar = {
                         elegirFotos.launch(
@@ -71,31 +72,18 @@ fun PantallaFotos(
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
-
-        // Segunda fila si hay una tercera foto
-        if (estado.fotos.size >= 2) {
-            Espacio(12.dp)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                estado.fotos.drop(2).forEach { uri ->
-                    TarjetaFoto(uri = uri, alQuitar = { vm.quitarFoto(uri) }, modifier = Modifier.weight(1f))
-                }
-                if (estado.fotos.size < ReporteVM.MAX_FOTOS) {
-                    CuadroAgregarFoto(
-                        alPresionar = {
-                            elegirFotos.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (estado.fotos.size == 2) Spacer(Modifier.weight(1f))
+            // Si no hay fotos, un espacio vacío para que el cuadro "+" no ocupe todo el ancho
+            if (estado.fotos.isEmpty()) {
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
+
+        Espacio(8.dp)
+        Text(
+            text = "${estado.fotos.size} de ${ReporteVM.MAX_FOTOS} fotos (opcional)",
+            fontSize = 11.sp,
+            color = GrisTexto
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
