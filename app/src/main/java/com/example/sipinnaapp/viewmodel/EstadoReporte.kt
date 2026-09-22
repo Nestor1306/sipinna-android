@@ -10,7 +10,7 @@ data class EstadoReporte(
     val direccion: String = "",
     val buscandoUbicacion: Boolean = false,
 
-    // Paso 2: Fotos (guardamos las Uri como texto)
+    // Paso 2: Fotos (guardamos las Uri como texto, máximo 2)
     val fotos: List<String> = emptyList(),
 
     // Paso 3: Información del niño
@@ -26,7 +26,11 @@ data class EstadoReporte(
     val cargando: Boolean = false,
     val error: String = "",
     val folioGenerado: String = "",   // si no está vacío, el reporte ya se envió
+    val estadoGenerado: String = "",  // estado que devolvió el servidor al enviarlo
+    val avisoFotos: String = "",      // si alguna foto no se pudo subir, aquí va el aviso
 
-    // Reportes ya enviados (para las tarjetas del Home)
-    val historial: List<ReporteResumen> = emptyList()
+    // Reportes ya enviados (para las tarjetas del Home), vienen de la base de datos
+    val historial: List<ReporteResumen> = emptyList(),
+    val cargandoHistorial: Boolean = false,
+    val errorHistorial: String = ""
 )

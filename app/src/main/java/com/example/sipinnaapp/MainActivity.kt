@@ -61,15 +61,35 @@ fun AppNavegacion(
     reporteVM: ReporteVM,
     modifier: Modifier = Modifier
 ) {
-    // Guardamos en qué pantalla estamos
-    var pantallaActual by remember { mutableStateOf("login") }
-
-    // Cuando el login es exitoso, entra directo al Home
     val estadoLogin by loginVM.estado.collectAsState()
     val estadoReporte by reporteVM.estado.collectAsState()
-    LaunchedEffect(estadoLogin.loginExitoso) {
-        if (estadoLogin.loginExitoso) {
+
+    // Guardamos en qué pantalla estamos.
+    // Si ya había una sesión guardada, empezamos directo en el Home.
+    var pantallaActual by remember {
+        mutableStateOf(
+            if (estadoLogin.loginExitoso || estadoLogin.esAnonimo) "home" else "login"
+        )
+    }
+
+    // Cuando el login es exitoso, entra directo al Home
+    LaunchedEffect(
+        estadoLogin.loginExitoso,
+        estadoLogin.esAnonimo
+    ) {
+
+        if (
+            estadoLogin.loginExitoso ||
+            estadoLogin.esAnonimo
+        ) {
             pantallaActual = "home"
+        }
+    }
+
+    // Cada vez que entramos al Home pedimos el historial a la base de datos
+    LaunchedEffect(pantallaActual, estadoLogin.token) {
+        if (pantallaActual == "home" && estadoLogin.token.isNotBlank()) {
+            reporteVM.cargarHistorial(estadoLogin.token)
         }
     }
 
@@ -94,6 +114,9 @@ fun AppNavegacion(
             } else {
                 estadoReporte.historial
             },
+            cargando = estadoReporte.cargandoHistorial,
+            mensajeError = estadoReporte.errorHistorial,
+            esAnonimo = estadoLogin.esAnonimo,
             alHacerReporte = {
                 reporteVM.nuevoReporte()
                 pantallaActual = "reporte"
@@ -106,6 +129,7 @@ fun AppNavegacion(
             alRegresar = { pantallaActual = "home" },
             alCerrarSesion = {
                 loginVM.cerrarSesion()
+                reporteVM.limpiarTodo()
                 pantallaActual = "login"
             },
             modifier = modifier

@@ -48,10 +48,21 @@ fun PantallaReporteEnviado(
         }
 
         Text(
-            text = "Reporte confirmado",
+            text = "Reporte enviado",
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
             color = VerdeConfirmado
+        )
+
+        Espacio(6.dp)
+
+        // Estado real que devolvió el servidor (normalmente "en progreso")
+        val info = infoDeEstado(estado.estadoGenerado)
+        Text(
+            text = "Estado: ${info.titulo}",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = info.color
         )
 
         Espacio(6.dp)
@@ -62,6 +73,16 @@ fun PantallaReporteEnviado(
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
+
+        // Aviso si alguna foto no se pudo subir (el reporte sí quedó guardado)
+        if (estado.avisoFotos.isNotEmpty()) {
+            Espacio(8.dp)
+            Text(
+                text = estado.avisoFotos,
+                fontSize = 12.sp,
+                color = RojoNoApto
+            )
+        }
 
         Espacio(32.dp)
 

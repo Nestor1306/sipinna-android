@@ -21,10 +21,12 @@ data class ReporteResponse(
     val estado: String
 )
 
-// Resumen que se muestra en las tarjetas del Home
+// Resumen que se muestra en las tarjetas del Home.
+// Viene de la base de datos (GET /reporte/mis-reportes).
+// Los nombres coinciden con las columnas de la tabla "reportes".
 data class ReporteResumen(
-    val folio: String,
-    val estado: String,       // "confirmado", "en_progreso", "no_apto"
-    val descripcion: String,
-    val direccion: String
+    val folio: String?,
+    val estado: String?,      // "pendiente", "en_progreso", "confirmado", "no_apto"...
+    val descripcion: String?,
+    val direccion: String?
 )
