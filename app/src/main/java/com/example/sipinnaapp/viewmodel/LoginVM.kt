@@ -91,12 +91,11 @@ class LoginVM(
             return
         }
 
-        viewModelScope.launch {
+        _estado.value = _estado.value.copy(cargando = true)
 
-            _estado.value =
-                _estado.value.copy(
-                    cargando = true
-                )
+
+        viewModelScope.launch {
+            _estado.value = _estado.value.copy(cargando = true)
 
             try {
 
@@ -117,11 +116,9 @@ class LoginVM(
                         respuesta.body()
 
                     if (datos != null) {
-
-                        // GUARDA LA SESIÓN EN EL TELÉFONO
                         sessionManager.guardarSesion(
                             token = datos.token,
-                            nombre = datos.usuario.nombre,
+                            nombre = datos.user_name,
                             esAnonimo = false
                         )
 
@@ -130,10 +127,9 @@ class LoginVM(
                                 cargando = false,
                                 loginExitoso = true,
                                 token = datos.token,
-                                nombreUsuario = datos.usuario.nombre,
+                                nombreUsuario = datos.user_name,
                                 esAnonimo = false
                             )
-
                     } else {
 
                         _estado.value =

@@ -9,7 +9,7 @@ data class LoginRequest(
 // Lo que el servidor nos devuelve
 data class LoginResponse(
     val token: String,
-    val usuario: UsuarioLogeado
+    val user_name: String
 )
 
 // El usuario que viene anidado dentro de la respuesta

@@ -28,7 +28,7 @@ interface ApiService {
     ): Response<Any>
 
     // POST /login → iniciar sesión y obtener el token
-    @POST("login")
+    @POST("auth/login")
     suspend fun login(
         @Body credenciales: LoginRequest
     ): Response<LoginResponse>
