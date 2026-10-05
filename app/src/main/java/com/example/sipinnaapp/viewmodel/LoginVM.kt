@@ -8,6 +8,7 @@ import com.example.sipinnaapp.model.LoginRequest
 import com.example.sipinnaapp.network.RetrofitClient
 import com.example.sipinnaapp.network.mensajeDeExcepcion
 import com.example.sipinnaapp.network.mensajeDeRespuesta
+import com.example.sipinnaapp.network.sacarTokenDeCookie
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -115,10 +116,17 @@ class LoginVM(
                     val datos =
                         respuesta.body()
 
-                    if (datos != null) {
+                    // El token no viene en el cuerpo: viene en la cookie "session_token"
+                    val token =
+                        sacarTokenDeCookie(respuesta)
+
+                    if (datos != null && token.isNotBlank()) {
+
+                        val nombre = datos.name ?: ""
+
                         sessionManager.guardarSesion(
-                            token = datos.token,
-                            nombre = datos.user_name,
+                            token = token,
+                            nombre = nombre,
                             esAnonimo = false
                         )
 
@@ -126,8 +134,8 @@ class LoginVM(
                             _estado.value.copy(
                                 cargando = false,
                                 loginExitoso = true,
-                                token = datos.token,
-                                nombreUsuario = datos.user_name,
+                                token = token,
+                                nombreUsuario = nombre,
                                 esAnonimo = false
                             )
                     } else {

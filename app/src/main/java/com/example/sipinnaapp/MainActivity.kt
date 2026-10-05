@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -27,6 +29,9 @@ import com.example.sipinnaapp.view.PantallaReporteEnviado
 import com.example.sipinnaapp.viewmodel.LoginVM
 import com.example.sipinnaapp.viewmodel.RegistroVM
 import com.example.sipinnaapp.viewmodel.ReporteVM
+
+// Cuánto tarda el cambio suave entre pantallas (en milisegundos)
+const val DURACION_TRANSICION = 400
 
 class MainActivity : ComponentActivity() {
 
@@ -93,53 +98,61 @@ fun AppNavegacion(
         }
     }
 
-    when (pantallaActual) {
-        "login" -> PantallaLogin(
-            vm = loginVM,
-            alIrARegistro = { pantallaActual = "registro" },
-            alEntrarAnonimo = {
-                loginVM.entrarAnonimo()
-                pantallaActual = "home"
-            },
-            modifier = modifier
-        )
-        "registro" -> PantallaRegistro(
-            vm = registroVM,
-            alIrALogin = { pantallaActual = "login" },
-            modifier = modifier
-        )
-        "home" -> PantallaHome(
-            reportes = if (estadoLogin.esAnonimo) {
-                emptyList()
-            } else {
-                estadoReporte.historial
-            },
-            cargando = estadoReporte.cargandoHistorial,
-            mensajeError = estadoReporte.errorHistorial,
-            esAnonimo = estadoLogin.esAnonimo,
-            alHacerReporte = {
-                reporteVM.nuevoReporte()
-                pantallaActual = "reporte"
-            },
-            alIrAPerfil = { pantallaActual = "perfil" },
-            modifier = modifier
-        )
-        "perfil" -> PantallaPerfil(
-            nombre = estadoLogin.nombreUsuario,
-            alRegresar = { pantallaActual = "home" },
-            alCerrarSesion = {
-                loginVM.cerrarSesion()
-                reporteVM.limpiarTodo()
-                pantallaActual = "login"
-            },
-            modifier = modifier
-        )
-        "reporte" -> FlujoReporte(
-            vm = reporteVM,
-            token = estadoLogin.token,
-            alSalir = { pantallaActual = "home" },
-            modifier = modifier
-        )
+    // Crossfade: la pantalla anterior se desvanece mientras aparece la nueva,
+    // en lugar de cambiar de golpe. Ojo: adentro se usa "pantalla", no "pantallaActual".
+    Crossfade(
+        targetState = pantallaActual,
+        animationSpec = tween(DURACION_TRANSICION),
+        label = "pantallas"
+    ) { pantalla ->
+        when (pantalla) {
+            "login" -> PantallaLogin(
+                vm = loginVM,
+                alIrARegistro = { pantallaActual = "registro" },
+                alEntrarAnonimo = {
+                    loginVM.entrarAnonimo()
+                    pantallaActual = "home"
+                },
+                modifier = modifier
+            )
+            "registro" -> PantallaRegistro(
+                vm = registroVM,
+                alIrALogin = { pantallaActual = "login" },
+                modifier = modifier
+            )
+            "home" -> PantallaHome(
+                reportes = if (estadoLogin.esAnonimo) {
+                    emptyList()
+                } else {
+                    estadoReporte.historial
+                },
+                cargando = estadoReporte.cargandoHistorial,
+                mensajeError = estadoReporte.errorHistorial,
+                esAnonimo = estadoLogin.esAnonimo,
+                alHacerReporte = {
+                    reporteVM.nuevoReporte()
+                    pantallaActual = "reporte"
+                },
+                alIrAPerfil = { pantallaActual = "perfil" },
+                modifier = modifier
+            )
+            "perfil" -> PantallaPerfil(
+                nombre = estadoLogin.nombreUsuario,
+                alRegresar = { pantallaActual = "home" },
+                alCerrarSesion = {
+                    loginVM.cerrarSesion()
+                    reporteVM.limpiarTodo()
+                    pantallaActual = "login"
+                },
+                modifier = modifier
+            )
+            "reporte" -> FlujoReporte(
+                vm = reporteVM,
+                token = estadoLogin.token,
+                alSalir = { pantallaActual = "home" },
+                modifier = modifier
+            )
+        }
     }
 }
 
@@ -164,45 +177,50 @@ fun FlujoReporte(
         )
     }
 
-    // Si ya tenemos folio, el reporte se envió bien
-    if (estado.folioGenerado.isNotEmpty()) {
-        PantallaReporteEnviado(
-            vm = vm,
-            alCerrar = {
-                vm.nuevoReporte()
-                alSalir()
-            },
-            modifier = modifier
-        )
-        return
-    }
+    // Qué pantalla del reporte toca: 1 a 5 son los pasos, 6 es "Reporte enviado"
+    val pantallaReporte = if (estado.folioGenerado.isNotEmpty()) 6 else estado.pasoActual
 
-    when (estado.pasoActual) {
-        1 -> PantallaLocacion(
-            vm = vm,
-            alRegresar = alSalir,   // en el paso 1 regresar es salir al Home
-            modifier = modifier
-        )
-        2 -> PantallaFotos(
-            vm = vm,
-            alRegresar = { vm.pasoAnterior() },
-            modifier = modifier
-        )
-        3 -> PantallaInfoNino(
-            vm = vm,
-            alRegresar = { vm.pasoAnterior() },
-            modifier = modifier
-        )
-        4 -> PantallaDescripcion(
-            vm = vm,
-            alRegresar = { vm.pasoAnterior() },
-            modifier = modifier
-        )
-        5 -> PantallaConfirmar(
-            vm = vm,
-            alRegresar = { vm.pasoAnterior() },
-            alEnviar = { vm.enviar(token) },
-            modifier = modifier
-        )
+    // Mismo cambio suave entre los pasos del reporte
+    Crossfade(
+        targetState = pantallaReporte,
+        animationSpec = tween(DURACION_TRANSICION),
+        label = "pasos"
+    ) { paso ->
+        when (paso) {
+            // Si ya tenemos folio, el reporte se envió bien.
+            // El formulario se limpia al empezar el siguiente reporte (botón +),
+            // así esta pantalla no se vacía mientras se desvanece.
+            6 -> PantallaReporteEnviado(
+                vm = vm,
+                alCerrar = alSalir,
+                modifier = modifier
+            )
+            1 -> PantallaLocacion(
+                vm = vm,
+                alRegresar = alSalir,   // en el paso 1 regresar es salir al Home
+                modifier = modifier
+            )
+            2 -> PantallaFotos(
+                vm = vm,
+                alRegresar = { vm.pasoAnterior() },
+                modifier = modifier
+            )
+            3 -> PantallaInfoNino(
+                vm = vm,
+                alRegresar = { vm.pasoAnterior() },
+                modifier = modifier
+            )
+            4 -> PantallaDescripcion(
+                vm = vm,
+                alRegresar = { vm.pasoAnterior() },
+                modifier = modifier
+            )
+            5 -> PantallaConfirmar(
+                vm = vm,
+                alRegresar = { vm.pasoAnterior() },
+                alEnviar = { vm.enviar(token) },
+                modifier = modifier
+            )
+        }
     }
 }

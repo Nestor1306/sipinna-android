@@ -8,8 +8,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import coil.imageLoader
 import coil.request.ImageRequest
+import com.example.sipinnaapp.model.ImagenPorSubir
+import com.example.sipinnaapp.model.RegistroImagenesRequest
 import com.example.sipinnaapp.model.ReporteRequest
 import com.example.sipinnaapp.network.RetrofitClient
+import com.example.sipinnaapp.network.cookieDeSesion
 import com.example.sipinnaapp.network.mensajeDeExcepcion
 import com.example.sipinnaapp.network.mensajeDeRespuesta
 import kotlinx.coroutines.Dispatchers
@@ -32,8 +35,15 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     val estado: StateFlow<EstadoReporte> = _estado
 
     companion object {
+        private const val REINTENTAR = " Tu avance se guardó: toca \"Enviar reporte\" para reintentar."
+
         const val TOTAL_PASOS = 5
-        const val MAX_FOTOS = 2              // el diseño permite de 0 a 2 fotos
+        const val MAX_FOTOS = 2              // el diseño permite hasta 2 fotos
+
+        // Por ahora el backend solo acepta enviar (PUT /report/{id}/submit) reportes
+        // con al menos una foto subida, así que la pedimos. Si el backend cambia para
+        // permitir 0 fotos, basta con poner esto en false.
+        const val FOTO_OBLIGATORIA = false
         const val LADO_MAXIMO_FOTO = 1600    // pixeles; las fotos se reducen antes de subirlas
 
         // Opciones de la pantalla "Información del niño" (igual que en Figma)
@@ -105,7 +115,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         // Validación del paso en el que estamos antes de avanzar
         val errorPaso = when (e.pasoActual) {
             1 -> if (e.direccion.isBlank() && e.latitud == 0.0) "Indica la ubicación del reporte" else ""
-            2 -> "" // las fotos son opcionales
+            2 -> if (FOTO_OBLIGATORIA && e.fotos.isEmpty()) "Agrega al menos una foto del lugar" else ""
             3 -> when {
                 e.edadNino.isEmpty() -> "Selecciona la edad aproximada"
                 e.tiposTrabajo.isEmpty() -> "Selecciona al menos un tipo de trabajo"
@@ -129,114 +139,194 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     fun pasoAnterior() {
         val actual = _estado.value.pasoActual
         if (actual > 1) {
-            _estado.value = _estado.value.copy(pasoActual = actual - 1)
+            _estado.value = sinProgresoDeEnvio(_estado.value).copy(pasoActual = actual - 1)
         }
     }
 
     fun irAPaso(paso: Int) {
-        _estado.value = _estado.value.copy(pasoActual = paso.coerceIn(1, TOTAL_PASOS))
+        _estado.value = sinProgresoDeEnvio(_estado.value).copy(pasoActual = paso.coerceIn(1, TOTAL_PASOS))
+    }
+
+    // Si el usuario regresa a editar después de un envío que falló a la mitad, el borrador
+    // que ya existe en el servidor tiene los datos viejos. Lo olvidamos para que el
+    // siguiente "Enviar" cree uno nuevo con los datos corregidos. (El borrador viejo se
+    // queda en DRAFT: no aparece en el historial ni lo analiza Jev.)
+    private fun sinProgresoDeEnvio(e: EstadoReporte): EstadoReporte {
+        if (e.reporteIdBorrador.isBlank()) return e
+        return e.copy(reporteIdBorrador = "", idsImagenes = emptyList(), fotosSubidas = emptySet())
     }
 
     // --- Envío al servidor ---
+    //
+    // El backend crea un reporte en 4 pasos:
+    //   1. POST /report                          → crea el reporte en DRAFT, regresa su id
+    //   2. POST /report/{id}/images              → registra cuántas fotos vienen, regresa sus ids
+    //   3. PUT  /report/{id}/images/{image_id}   → sube cada foto a S3 (una por llamada)
+    //   4. PUT  /report/{id}/submit              → el reporte pasa de DRAFT a "registrado"
+    //
+    // Cada paso que termina bien se guarda en el estado. Si algo falla, el usuario vuelve
+    // a tocar "Enviar reporte" y se continúa desde el paso que falló, sin duplicar nada.
 
     fun enviar(token: String) {
         val e = _estado.value
+        if (e.cargando) return   // evita enviar dos veces con doble toque
+
+        // Las 4 rutas piden sesión en el backend
+        if (token.isBlank()) {
+            _estado.value = e.copy(
+                error = "Por ahora no se pueden enviar reportes sin cuenta. Crea una cuenta o inicia sesión para enviarlo."
+            )
+            return
+        }
+        val sesion = cookieDeSesion(token)
 
         viewModelScope.launch {
-            _estado.value = e.copy(cargando = true)
+            _estado.value = _estado.value.copy(cargando = true, error = "", progresoEnvio = "Creando reporte…")
 
             try {
-                val ahora = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault()).format(Date())
-
-                val peticion = ReporteRequest(
-                    descripcion = e.descripcion.trim(),
-                    latitud = e.latitud,
-                    longitud = e.longitud,
-                    direccion = e.direccion.trim(),
-                    cantidad_ninos = 1,
-                    edad_ninos = e.edadNino,
-                    tipo_trabajo = e.tiposTrabajo.joinToString(", "),
-                    horario_avistamiento = ahora,
-                    condicion = e.condicion
-                )
-
-                val autorizacion =
-                    if(token.isBlank()) null
-                    else "Bearer $token"
-
-                val respuesta =
-                    RetrofitClient.api.crearReporte(autorizacion,peticion)
-
-                if (respuesta.isSuccessful) {
-                    val datos = respuesta.body()
-
-                    // El reporte ya existe en la base de datos; ahora subimos sus fotos
-                    val fotosFallidas = subirFotos(autorizacion, datos?.id ?: "", e.fotos)
-
-                    _estado.value = _estado.value.copy(
-                        cargando = false,
-                        folioGenerado = datos?.folio ?: "SIN-FOLIO",
-                        estadoGenerado = datos?.estado ?: "",
-                        avisoFotos = if (fotosFallidas > 0) {
-                            "Tu reporte se envió, pero $fotosFallidas foto(s) no se pudieron subir."
-                        } else {
-                            ""
-                        }
-                    )
-                } else {
-                    _estado.value = _estado.value.copy(
-                        cargando = false,
-                        error = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
-                    )
+                // ---- Paso 1: crear el borrador ----
+                var reporteId = _estado.value.reporteIdBorrador
+                if (reporteId.isBlank()) {
+                    val respuesta = RetrofitClient.api.crearReporte(sesion, armarPeticion(e))
+                    if (!respuesta.isSuccessful) {
+                        return@launch falloEnPaso(1, respuesta.code(), respuesta.errorBody()?.string())
+                    }
+                    reporteId = respuesta.body()?.reporteId.orEmpty()
+                    if (reporteId.isBlank()) {
+                        return@launch falloEnPaso(1, null, "El servidor no regresó el id del reporte")
+                    }
+                    _estado.value = _estado.value.copy(reporteIdBorrador = reporteId)
                 }
+
+                // ---- Paso 2: registrar las fotos ----
+                var ids = _estado.value.idsImagenes
+                if (e.fotos.isNotEmpty() && ids.isEmpty()) {
+                    _estado.value = _estado.value.copy(progresoEnvio = "Preparando fotos…")
+
+                    val peticion = RegistroImagenesRequest(
+                        e.fotos.indices.map { i -> ImagenPorSubir("foto${i + 1}.jpg", "image/jpeg") }
+                    )
+                    val respuesta = RetrofitClient.api.registrarImagenes(sesion, reporteId, peticion)
+                    if (!respuesta.isSuccessful) {
+                        return@launch falloEnPaso(2, respuesta.code(), respuesta.errorBody()?.string())
+                    }
+                    ids = respuesta.body()?.ids.orEmpty()
+                    if (ids.size != e.fotos.size) {
+                        return@launch falloEnPaso(2, null, "Se esperaban ${e.fotos.size} ids de fotos y llegaron ${ids.size}")
+                    }
+                    _estado.value = _estado.value.copy(idsImagenes = ids)
+                }
+
+                // ---- Paso 3: subir cada foto ----
+                for ((indice, uri) in e.fotos.withIndex()) {
+                    val imagenId = ids[indice]
+                    if (imagenId in _estado.value.fotosSubidas) continue   // ya subió en un intento anterior
+
+                    _estado.value = _estado.value.copy(
+                        progresoEnvio = "Subiendo foto ${indice + 1} de ${e.fotos.size}…"
+                    )
+
+                    val bytes = prepararFoto(uri)
+                        ?: return@launch falloEnPaso(3, null, "No se pudo leer la foto ${indice + 1}")
+
+                    val archivo = MultipartBody.Part.createFormData(
+                        "file",
+                        "foto${indice + 1}.jpg",
+                        bytes.toRequestBody("image/jpeg".toMediaType())
+                    )
+                    val respuesta = RetrofitClient.api.subirImagen(sesion, reporteId, imagenId, archivo)
+                    if (!respuesta.isSuccessful || respuesta.body()?.success == false) {
+                        return@launch falloEnPaso(
+                            3,
+                            respuesta.code(),
+                            respuesta.errorBody()?.string() ?: respuesta.body()?.message
+                        )
+                    }
+                    _estado.value = _estado.value.copy(fotosSubidas = _estado.value.fotosSubidas + imagenId)
+                }
+
+                // ---- Paso 4: enviar (DRAFT → registrado) ----
+                _estado.value = _estado.value.copy(progresoEnvio = "Enviando reporte…")
+                val respuesta = RetrofitClient.api.enviarReporte(sesion, reporteId)
+                if (!respuesta.isSuccessful) {
+                    return@launch falloEnPaso(4, respuesta.code(), respuesta.errorBody()?.string())
+                }
+
+                // El backend no regresa el folio al crear el reporte, así que lo buscamos
+                // en el historial del usuario: es el enviado más reciente.
+                val folio = folioMasReciente(sesion)
+
+                _estado.value = _estado.value.copy(
+                    cargando = false,
+                    progresoEnvio = "",
+                    folioGenerado = folio.ifBlank { "Consúltalo en tu historial" },
+                    estadoGenerado = "registrado",   // todo reporte enviado empieza así
+                    avisoFotos = ""
+                )
             } catch (ex: Exception) {
                 _estado.value = _estado.value.copy(
                     cargando = false,
-                    error = mensajeDeExcepcion(ex)
+                    progresoEnvio = "",
+                    error = mensajeDeExcepcion(ex) + REINTENTAR
                 )
             }
         }
     }
 
-    // --- Subida de fotos ---
+    // Arma el JSON del paso 1. La dirección escrita y la condición no tienen columna en la
+    // base, así que van al final de la descripción para no perderlas.
+    private fun armarPeticion(e: EstadoReporte): ReporteRequest {
+        val partes = mutableListOf(e.descripcion.trim())
+        if (e.direccion.isNotBlank()) partes += "Dirección: ${e.direccion.trim()}"
+        if (e.condicion.isNotBlank()) partes += "Condición: ${e.condicion}"
 
-    // Sube las fotos una por una al reporte recién creado.
-    // Regresa cuántas fotos NO se pudieron subir (0 = todas bien).
-    private suspend fun subirFotos(autorizacion: String?, reporteId: String, fotos: List<String>): Int {
-        if (fotos.isEmpty()) return 0
-        if (reporteId.isBlank()) return fotos.size   // sin id no sabemos a qué reporte subirlas
+        return ReporteRequest(
+            description = partes.joinToString("\n"),
+            latitude = e.latitud,
+            longitude = e.longitud,
+            children_quantity = 1,
+            children_age = e.edadNino,
+            work_type = e.tiposTrabajo.joinToString(", "),
+            sighting_time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault()).format(Date())
+        )
+    }
 
-        var fallidas = 0
+    // Deja el error en pantalla. El progreso (id del borrador, fotos ya subidas) se conserva,
+    // así que al volver a tocar "Enviar reporte" se continúa desde aquí.
+    private fun falloEnPaso(paso: Int, codigo: Int?, detalle: String?) {
+        Log.e("SIPINNA", "Envío falló en el paso $paso ($codigo): $detalle")
 
-        for ((indice, uri) in fotos.withIndex()) {
-            try {
-                val bytes = prepararFoto(uri)
-                if (bytes == null) {
-                    fallidas++
-                    continue
-                }
-
-                // Armamos el "formulario" con el archivo y su orden (1, 2)
-                val archivo = MultipartBody.Part.createFormData(
-                    "imagen",
-                    "foto${indice + 1}.jpg",
-                    bytes.toRequestBody("image/jpeg".toMediaType())
-                )
-                val orden = (indice + 1).toString().toRequestBody("text/plain".toMediaType())
-
-                val respuesta = RetrofitClient.api.subirImagen(autorizacion, reporteId, archivo, orden)
-
-                if (!respuesta.isSuccessful) {
-                    Log.e("SIPINNA", "Foto ${indice + 1} rechazada: ${respuesta.code()} ${respuesta.errorBody()?.string()}")
-                    fallidas++
-                }
-            } catch (ex: Exception) {
-                Log.e("SIPINNA", "No se pudo subir la foto ${indice + 1}", ex)
-                fallidas++
-            }
+        val mensaje = if (codigo != null) {
+            mensajeDeRespuesta(codigo, detalle)
+        } else {
+            "Ocurrió un error inesperado."
         }
 
-        return fallidas
+        _estado.value = _estado.value.copy(
+            cargando = false,
+            progresoEnvio = "",
+            error = mensaje + REINTENTAR
+        )
+    }
+
+    // Busca el folio del reporte que se acaba de enviar: entre los reportes ya enviados
+    // (no DRAFT) del usuario, el que tenga el consecutivo más alto (…-2026-000123).
+    private suspend fun folioMasReciente(sesion: String): String {
+        return try {
+            val respuesta = RetrofitClient.api.misReportes(sesion)
+            if (!respuesta.isSuccessful) return ""
+            respuesta.body()?.reports.orEmpty()
+                .filter { it.report_state != "DRAFT" }
+                .maxByOrNull { consecutivoDeFolio(it.folio) }
+                ?.folio.orEmpty()
+        } catch (ex: Exception) {
+            Log.e("SIPINNA", "No se pudo obtener el folio", ex)
+            ""
+        }
+    }
+
+    private fun consecutivoDeFolio(folio: String?): Int {
+        return folio?.substringAfterLast("-")?.toIntOrNull() ?: 0
     }
 
     // Lee la foto de la galería, la hace más pequeña y la convierte a JPEG.
@@ -273,12 +363,20 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             _estado.value = _estado.value.copy(cargandoHistorial = true, errorHistorial = "")
 
             try {
-                val respuesta = RetrofitClient.api.misReportes("Bearer $token")
+                val respuesta = RetrofitClient.api.misReportes(cookieDeSesion(token))
 
                 if (respuesta.isSuccessful) {
+                    val reportes = respuesta.body()?.reports ?: emptyList()
+
+                    // El backend no los ordena. El folio termina en un número que crece
+                    // con cada reporte ("RIETI-ATIZAPAN-2026-000007"), así que ordenamos
+                    // por ese número para dejar arriba los más recientes.
+                    // Los borradores (DRAFT) son envíos que no se terminaron: no se muestran.
                     _estado.value = _estado.value.copy(
                         cargandoHistorial = false,
-                        historial = respuesta.body() ?: emptyList()
+                        historial = reportes
+                            .filter { it.report_state != "DRAFT" }
+                            .sortedByDescending { consecutivoDeFolio(it.folio) }
                     )
                 } else {
                     _estado.value = _estado.value.copy(
