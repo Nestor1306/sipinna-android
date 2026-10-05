@@ -196,8 +196,12 @@ fun PantallaConfirmar(
         // Botón enviar (fijo abajo)
         Box(Modifier.padding(horizontal = 18.dp)) {
             if (estado.cargando) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().height(46.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     CircularProgressIndicator(color = Teal)
+                    if (estado.progresoEnvio.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(estado.progresoEnvio, fontSize = 12.sp, color = GrisTexto)
+                    }
                 }
             } else {
                 BotonPrincipal(texto = "Enviar reporte", alPresionar = alEnviar)

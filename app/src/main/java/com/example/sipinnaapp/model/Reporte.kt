@@ -1,32 +1,60 @@
 package com.example.sipinnaapp.model
 
-// Lo que enviamos al servidor (POST /reporte)
-// Los nombres coinciden con las columnas de la tabla "reportes"
+import com.google.gson.annotations.SerializedName
+
+// Lo que enviamos al servidor (POST /report).
+// Los nombres coinciden con el JSON que espera el backend (en inglés).
+// La dirección escrita y la condición del niño no tienen columna en la base,
+// por eso ReporteVM las agrega al final de "description".
 data class ReporteRequest(
-    val descripcion: String,
-    val latitud: Double,
-    val longitud: Double,
-    val direccion: String,
-    val cantidad_ninos: Int,
-    val edad_ninos: String,
-    val tipo_trabajo: String,          // varias opciones separadas por coma
-    val horario_avistamiento: String,  // "2026-09-11T17:47"
-    val condicion: String              // "Solo / Sola", "Con adultos", etc.
+    val description: String,
+    val latitude: Double,
+    val longitude: Double,
+    val children_quantity: Int,
+    val children_age: String,
+    val work_type: String,             // varias opciones separadas por coma
+    val sighting_time: String          // "2026-09-11T17:47"
 )
 
-// Lo que el servidor devuelve al crear el reporte
-data class ReporteResponse(
-    val id: String,
-    val folio: String,
-    val estado: String
+// Paso 1: respuesta de POST /report → {"reporte_id": "..."}
+data class BorradorCreado(
+    @SerializedName("reporte_id") val reporteId: String?
 )
 
-// Resumen que se muestra en las tarjetas del Home.
-// Viene de la base de datos (GET /reporte/mis-reportes).
-// Los nombres coinciden con las columnas de la tabla "reportes".
+// Paso 2: lo que mandamos a POST /report/{id}/images
+// {"images": [{"file_name": "foto1.jpg", "content_type": "image/jpeg"}, ...]}
+data class RegistroImagenesRequest(
+    @SerializedName("images") val imagenes: List<ImagenPorSubir>
+)
+
+data class ImagenPorSubir(
+    @SerializedName("file_name") val nombreArchivo: String,
+    @SerializedName("content_type") val tipo: String
+)
+
+// Paso 2: respuesta → {"success": ["id-foto-1", "id-foto-2"]} (mismo orden que enviamos)
+data class ImagenesRegistradas(
+    @SerializedName("success") val ids: List<String>?
+)
+
+// Paso 3: respuesta de PUT /report/{id}/images/{image_id}
+// {"success": true, "status": "uploaded" | "already_uploaded" | ..., "image_id": "...", "message": "..."}
+data class RespuestaSubidaImagen(
+    val success: Boolean?,
+    val status: String?,
+    val message: String?
+)
+
+// Lo que devuelve GET /report: {"reports": [ ... ]}
+data class RespuestaMisReportes(
+    val reports: List<ReporteResumen>?
+)
+
+// Resumen de cada reporte, para las tarjetas del Home
 data class ReporteResumen(
     val folio: String?,
-    val estado: String?,      // "pendiente", "en_progreso", "confirmado", "no_apto"...
-    val descripcion: String?,
-    val direccion: String?
+    val report_state: String?,   // "DRAFT", "registrado", "en_revision", "canalizado"...
+    val latitude: Double?,
+    val longitude: Double?,
+    val description: String?
 )

@@ -20,11 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.sipinnaapp.R
 import com.example.sipinnaapp.model.ReporteResumen
 import com.example.sipinnaapp.ui.theme.*
@@ -44,7 +47,7 @@ fun PantallaHome(
     // Filtra las tarjetas por lo que se escribe en el buscador
     val reportesFiltrados = if (busqueda.isBlank()) reportes
     else reportes.filter {
-        (it.direccion ?: "").contains(busqueda, ignoreCase = true) ||
+        (it.description ?: "").contains(busqueda, ignoreCase = true) ||
         (it.folio ?: "").contains(busqueda, ignoreCase = true)
     }
 
@@ -94,7 +97,7 @@ fun PantallaHome(
                 CampoBusqueda(
                     valor = busqueda,
                     alCambiar = { busqueda = it },
-                    placeholder = "Av. Lago de Guadalupe",
+                    placeholder = "Busca por folio o descripción",
                     modifier = Modifier.weight(1f)
                 )
                 BotonFiltro(alPresionar = { /* pendiente: filtros */ })
@@ -113,17 +116,26 @@ fun PantallaHome(
                     CircularProgressIndicator(color = Teal)
                 }
             } else if (reportesFiltrados.isEmpty()) {
-                Box(
-                    contentAlignment = Alignment.Center,
+                // Pantalla vacía como en el Figma: logo al centro y un mensaje abajo
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.sipinna_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(90.dp)
+                    )
+                    Espacio(12.dp)
                     Text(
                         text = when {
-                            esAnonimo -> "Estás sin registrarte.\nPuedes hacer reportes, pero no ver su estado."
+                            // El estado de los reportes solo lo ven los usuarios registrados
+                            esAnonimo -> "Estás sin registrarte.\nCrea una cuenta para ver el estado de tus reportes."
                             mensajeError.isNotEmpty() -> mensajeError
-                            reportes.isEmpty() -> "Aún no tienes reportes.\nToca + para crear el primero."
+                            reportes.isEmpty() -> "Aún no tienes ningún reporte.\nToca + para crear el primero."
                             else -> "No hay reportes que coincidan."
                         },
                         fontSize = 13.sp,
@@ -198,14 +210,26 @@ private val FormaDiagonal = GenericShape { size, _ ->
     close()
 }
 
+// Dirección de una imagen fija del mapa (Mapbox Static Images) con un pin en el reporte.
+// OJO: Mapbox pide primero la longitud y después la latitud.
+// 330x170 @2x = el tamaño del mapa en la tarjeta (165 x 85 dp) en buena resolución.
+fun urlMapa(latitud: Double, longitud: Double, token: String): String {
+    return "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/" +
+        "pin-s+0a8f91($longitud,$latitud)/$longitud,$latitud,15,0/330x170@2x" +
+        "?access_token=$token"
+}
+
 // Tarjeta de un reporte: mapa a la izquierda, estado y detalle a la derecha
 @Composable
 fun TarjetaReporte(reporte: ReporteResumen) {
     // Texto y color según el estado real guardado en la base de datos
-    val info = infoDeEstado(reporte.estado)
+    val info = infoDeEstado(reporte.report_state)
     val titulo = info.titulo
     val colorTitulo = info.color
     val detalle = info.detalle
+
+    // La misma clave de Mapbox que usa el mapa de la pantalla de ubicación
+    val tokenMapbox = stringResource(R.string.mapbox_access_token)
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -217,7 +241,7 @@ fun TarjetaReporte(reporte: ReporteResumen) {
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
 
-            // Lado izquierdo: mapa (por ahora un recuadro con el pin)
+            // Lado izquierdo: mapa del lugar del reporte, con el corte diagonal
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -226,6 +250,8 @@ fun TarjetaReporte(reporte: ReporteResumen) {
                     .clip(FormaDiagonal)
                     .background(Teal.copy(alpha = 0.15f))
             ) {
+                // Primero el pin sobre el fondo. Si el mapa carga, queda encima y lo tapa;
+                // si no carga (sin internet, o la clave de Mapbox no lo permite), se ve el pin.
                 Icon(
                     imageVector = Icons.Default.Place,
                     contentDescription = null,
@@ -234,6 +260,14 @@ fun TarjetaReporte(reporte: ReporteResumen) {
                         .size(24.dp)
                         .offset(x = (-14).dp)
                 )
+                if (reporte.latitude != null && reporte.longitude != null) {
+                    AsyncImage(
+                        model = urlMapa(reporte.latitude, reporte.longitude, tokenMapbox),
+                        contentDescription = "Mapa del lugar del reporte",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
             // Lado derecho: estado + descripción
@@ -267,7 +301,7 @@ fun TarjetaReporte(reporte: ReporteResumen) {
             if (info.detalle.isEmpty()) {
                 Text(
                     text = reporte.folio ?: "",
-                    fontSize = 15.sp,
+                    fontSize = 13.sp,   // el folio es largo: "RIETI-ATIZAPAN-2026-000001"
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier
