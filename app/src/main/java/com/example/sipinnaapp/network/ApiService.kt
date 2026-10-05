@@ -1,61 +1,85 @@
 package com.example.sipinnaapp.network
 
+import com.example.sipinnaapp.model.BorradorCreado
+import com.example.sipinnaapp.model.ImagenesRegistradas
 import com.example.sipinnaapp.model.LoginRequest
 import com.example.sipinnaapp.model.LoginResponse
+import com.example.sipinnaapp.model.RegistroImagenesRequest
 import com.example.sipinnaapp.model.ReporteRequest
-import com.example.sipinnaapp.model.ReporteResponse
-import com.example.sipinnaapp.model.ReporteResumen
+import com.example.sipinnaapp.model.RespuestaMisReportes
+import com.example.sipinnaapp.model.RespuestaSubidaImagen
 import com.example.sipinnaapp.model.UsuarioRegistro
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 
-// Define los endpoints del backend Go
-// Cada función aquí = un endpoint de la API
+// Define los endpoints del backend Go (rama main del equipo)
+// Cada función aquí = un endpoint de la API.
+// Las rutas que piden sesión reciben la cookie "session_token=..." (ver Sesion.kt)
 interface ApiService {
 
-    // POST /user → registrar ciudadano
-    @POST("user")
+    // POST /auth/citizen → registrar ciudadano
+    @POST("auth/citizen")
     suspend fun registrarUsuario
                 (@Body usuario: UsuarioRegistro
     ): Response<Any>
 
-    // POST /login → iniciar sesión y obtener el token
+    // POST /auth/login → iniciar sesión (el token llega en la cookie)
     @POST("auth/login")
     suspend fun login(
         @Body credenciales: LoginRequest
     ): Response<LoginResponse>
 
-    // POST /reporte → crear un reporte (requiere el token del login)
-    @POST("reporte")
-    suspend fun crearReporte(
-        @Header("Authorization") token: String?,
-        @Body reporte: ReporteRequest
-    ): Response<ReporteResponse>
+    // ---- Envío de un reporte: 4 pasos (ver ReporteVM.enviar) ----
 
-    // POST /reporte/{id}/imagenes → sube UNA foto del reporte (se llama una vez por foto)
-    // Se manda como formulario "multipart": el archivo va en "imagen" y su posición en "orden".
-    // El backend la guarda en S3 y crea la fila en la tabla "imagenes_reporte".
+    // Paso 1. POST /report → crea el reporte como borrador (DRAFT)
+    // y responde {"reporte_id": "..."}
+    @POST("report")
+    suspend fun crearReporte(
+        @Header("Cookie") sesion: String?,
+        @Body reporte: ReporteRequest
+    ): Response<BorradorCreado>
+
+    // Paso 2. POST /report/{id}/images → avisa cuántas fotos se van a subir.
+    // El backend crea una fila "pendiente" por foto y responde sus IDs en el mismo orden:
+    // {"success": ["id-foto-1", "id-foto-2"]}
+    @POST("report/{report_id}/images")
+    suspend fun registrarImagenes(
+        @Header("Cookie") sesion: String?,
+        @Path("report_id") reporteId: String,
+        @Body imagenes: RegistroImagenesRequest
+    ): Response<ImagenesRegistradas>
+
+    // Paso 3. PUT /report/{id}/images/{image_id} → sube UNA foto (multipart, campo "file").
+    // El backend la guarda en S3 y la marca como subida.
     @Multipart
-    @POST("reporte/{id}/imagenes")
+    @PUT("report/{report_id}/images/{image_id}")
     suspend fun subirImagen(
-        @Header("Authorization") token: String?,
-        @Path("id") reporteId: String,
-        @Part imagen: MultipartBody.Part,
-        @Part("orden") orden: RequestBody
+        @Header("Cookie") sesion: String?,
+        @Path("report_id") reporteId: String,
+        @Path("image_id") imagenId: String,
+        @Part archivo: MultipartBody.Part
+    ): Response<RespuestaSubidaImagen>
+
+    // Paso 4. PUT /report/{id}/submit → el reporte pasa de DRAFT a "registrado".
+    // OJO: el backend solo lo acepta si el reporte tiene al menos una foto ya subida.
+    @PUT("report/{report_id}/submit")
+    suspend fun enviarReporte(
+        @Header("Cookie") sesion: String?,
+        @Path("report_id") reporteId: String
     ): Response<Any>
 
-    // GET /reporte/mis-reportes → los reportes del usuario que inició sesión
-    // (el backend sabe quién es gracias al token)
-    @GET("reporte/mis-reportes")
+    // GET /report → los reportes del usuario que inició sesión
+    // (el backend sabe quién es gracias a la cookie)
+    @GET("report")
     suspend fun misReportes(
-        @Header("Authorization") token: String
-    ): Response<List<ReporteResumen>>
+        @Header("Cookie") sesion: String
+    ): Response<RespuestaMisReportes>
 }
