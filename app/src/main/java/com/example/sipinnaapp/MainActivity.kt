@@ -29,6 +29,7 @@ import com.example.sipinnaapp.view.PantallaReporteEnviado
 import com.example.sipinnaapp.viewmodel.LoginVM
 import com.example.sipinnaapp.viewmodel.RegistroVM
 import com.example.sipinnaapp.viewmodel.ReporteVM
+import com.example.sipinnaapp.view.PantallaDetalleReporte
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -76,6 +77,9 @@ fun AppNavegacion(
             if (estadoLogin.loginExitoso || estadoLogin.esAnonimo) "home" else "login"
         )
     }
+
+    // Folio del reporte que se tocó en el Home (para la pantalla "detalle")
+    var folioAbierto by remember { mutableStateOf("") }
 
     // Cuando el login es exitoso, entra directo al Home
     LaunchedEffect(
@@ -134,8 +138,22 @@ fun AppNavegacion(
                     pantallaActual = "reporte"
                 },
                 alIrAPerfil = { pantallaActual = "perfil" },
+                alAbrirReporte = { reporte ->
+                    folioAbierto = reporte.folio ?: ""
+                    reporteVM.cargarDetalle(estadoLogin.token, folioAbierto)
+                    pantallaActual = "detalle"
+                },
                 modifier = modifier
             )
+            "detalle" -> PantallaDetalleReporte(
+                detalle = estadoReporte.detalle,
+                cargando = estadoReporte.cargandoDetalle,
+                mensajeError = estadoReporte.errorDetalle,
+                alRegresar = { pantallaActual = "home" },
+                alReintentar = { reporteVM.cargarDetalle(estadoLogin.token, folioAbierto) },
+                modifier = modifier
+            )
+
             "perfil" -> PantallaPerfil(
                 nombre = estadoLogin.nombreUsuario,
                 alRegresar = { pantallaActual = "home" },
