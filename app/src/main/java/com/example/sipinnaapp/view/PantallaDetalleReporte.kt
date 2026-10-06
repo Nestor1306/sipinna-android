@@ -1,6 +1,7 @@
 package com.example.sipinnaapp.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.sipinnaapp.R
 import com.example.sipinnaapp.model.ReporteDetalle
@@ -104,7 +107,13 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
     val info = infoDeEstado(detalle.last_state)
     val partes = separarDescripcion(detalle.description)
     val tokenMapbox = stringResource(R.string.mapbox_access_token)
-    val numFotos = detalle.images?.size ?: 0
+    val enlacesFotos = detalle.images.orEmpty()
+
+    // Foto que se tocó para verla en grande (null = ninguna)
+    var fotoAmpliada by remember { mutableStateOf<String?>(null) }
+    fotoAmpliada?.let { enlace ->
+        FotoEnGrande(enlace = enlace, alCerrar = { fotoAmpliada = null })
+    }
 
     Column(
         modifier = Modifier
@@ -192,19 +201,41 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
 
         Espacio(12.dp)
 
-        // Fotos: por ahora solo cuántas hay (verlas requiere que el backend dé un enlace de S3)
+        // Fotos: el backend manda enlaces temporales de S3 (duran 15 minutos)
         TarjetaResumen {
             TituloSeccion(Icons.Default.AccountBox, "Fotos del lugar")
-            Espacio(8.dp)
-            Text(
-                text = when (numFotos) {
-                    0 -> "Sin fotos"
-                    1 -> "1 foto adjunta"
-                    else -> "$numFotos fotos adjuntas"
-                },
-                fontSize = 12.sp,
-                color = Color.Black
-            )
+            Espacio(10.dp)
+            if (enlacesFotos.isEmpty()) {
+                Text(
+                    text = "Sin fotos",
+                    fontSize = 12.sp,
+                    color = GrisTexto
+                )
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    enlacesFotos.forEach { enlace ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(SuperficieSecundaria)
+                                .clickable { fotoAmpliada = enlace }
+                        ) {
+                            // Mientras carga (o si falla) se ve el ícono de fondo
+                            Icon(Icons.Default.AccountBox, contentDescription = null, tint = GrisTextoClaro)
+                            AsyncImage(
+                                model = enlace,
+                                contentDescription = "Foto del reporte",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                }
+                Espacio(6.dp)
+                Text("Toca una foto para verla completa", fontSize = 10.sp, color = GrisTexto)
+            }
         }
 
         Espacio(12.dp)
@@ -248,6 +279,38 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
         }
 
         Espacio(24.dp)
+    }
+}
+
+// Foto a pantalla completa sobre fondo negro; se cierra tocándola o con "atrás"
+@Composable
+private fun FotoEnGrande(enlace: String, alCerrar: () -> Unit) {
+    Dialog(
+        onDismissRequest = alCerrar,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .clickable(onClick = alCerrar)
+        ) {
+            AsyncImage(
+                model = enlace,
+                contentDescription = "Foto del reporte",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth()
+            )
+            IconButton(
+                onClick = alCerrar,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+            }
+        }
     }
 }
 
