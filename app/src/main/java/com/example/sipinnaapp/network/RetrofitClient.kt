@@ -16,7 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 private const val USAR_SERVIDOR_LOCAL = true
 
 private const val URL_LOCAL = "http://127.0.0.1:8081/"
-private const val URL_AWS = "http://18.210.27.222:8080/"
+private const val URL_AWS = "https://api.sipinna.com"
 
 object RetrofitClient {
 

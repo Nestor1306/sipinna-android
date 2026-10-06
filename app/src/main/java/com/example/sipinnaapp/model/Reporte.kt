@@ -58,3 +58,25 @@ data class ReporteResumen(
     val longitude: Double?,
     val description: String?
 )
+
+// Lo que devuelve GET /report/{folio}: {"report": { ... }}
+data class RespuestaDetalle(
+    val report: ReporteDetalle?
+)
+
+// Detalle completo de un reporte, tal como está en la base de datos
+data class ReporteDetalle(
+    val folio: String?,
+    val description: String?,        // incluye al final "Dirección: ..." y "Condición: ..."
+    val latitude: Double?,
+    val longitude: Double?,
+    val children_quantity: Int?,
+    val children_age: String?,
+    val work_type: String?,          // varias opciones separadas por coma
+    val created_at: String?,
+    val sighting_time: String?,
+    val zone_name: String?,
+    val last_state: String?,         // estado actual: "registrado", "en_revision"...
+    val state_changed_at: String?,
+    val images: List<String>?        // claves de las fotos en S3
+)

@@ -393,6 +393,40 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Pide a la base de datos el detalle de un reporte (al tocar su tarjeta en el Home)
+    fun cargarDetalle(token: String, folio: String) {
+        _estado.value = _estado.value.copy(detalle = null, cargandoDetalle = true, errorDetalle = "")
+
+        if (token.isBlank()) {
+            _estado.value = _estado.value.copy(
+                cargandoDetalle = false,
+                errorDetalle = "Inicia sesión para ver el detalle de tus reportes."
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val respuesta = RetrofitClient.api.detalleReporte(cookieDeSesion(token), folio)
+                val detalle = respuesta.body()?.report
+
+                _estado.value = if (respuesta.isSuccessful && detalle != null) {
+                    _estado.value.copy(cargandoDetalle = false, detalle = detalle)
+                } else {
+                    _estado.value.copy(
+                        cargandoDetalle = false,
+                        errorDetalle = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
+                    )
+                }
+            } catch (ex: Exception) {
+                _estado.value = _estado.value.copy(
+                    cargandoDetalle = false,
+                    errorDetalle = mensajeDeExcepcion(ex)
+                )
+            }
+        }
+    }
+
     // Al cerrar sesión se borra todo, para que otro usuario no vea estos reportes
     fun limpiarTodo() {
         _estado.value = EstadoReporte()

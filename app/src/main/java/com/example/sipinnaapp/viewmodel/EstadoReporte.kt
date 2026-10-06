@@ -1,6 +1,7 @@
 package com.example.sipinnaapp.viewmodel
 
 import com.example.sipinnaapp.model.ReporteResumen
+import com.example.sipinnaapp.model.ReporteDetalle
 
 // Un solo estado para todo el flujo del reporte (5 pasos)
 data class EstadoReporte(
@@ -40,5 +41,11 @@ data class EstadoReporte(
     // Reportes ya enviados (para las tarjetas del Home), vienen de la base de datos
     val historial: List<ReporteResumen> = emptyList(),
     val cargandoHistorial: Boolean = false,
-    val errorHistorial: String = ""
+    val errorHistorial: String = "",
+
+    // Detalle del reporte que se tocó en el Home (viene de GET /report/{folio})
+    val detalle: ReporteDetalle? = null,
+    val cargandoDetalle: Boolean = false,
+    val errorDetalle: String = ""
 )
+
