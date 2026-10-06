@@ -40,6 +40,7 @@ fun PantallaHome(
     esAnonimo: Boolean,
     alHacerReporte: () -> Unit,
     alIrAPerfil: () -> Unit,
+    alAbrirReporte: (ReporteResumen) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var busqueda by remember { mutableStateOf("") }
@@ -150,7 +151,7 @@ fun PantallaHome(
                     modifier = Modifier.weight(1f)
                 ) {
                     items(reportesFiltrados) { reporte ->
-                        TarjetaReporte(reporte)
+                        TarjetaReporte(reporte, alTocar = { alAbrirReporte(reporte) })
                     }
                 }
             }
@@ -221,7 +222,7 @@ fun urlMapa(latitud: Double, longitud: Double, token: String): String {
 
 // Tarjeta de un reporte: mapa a la izquierda, estado y detalle a la derecha
 @Composable
-fun TarjetaReporte(reporte: ReporteResumen) {
+fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
     // Texto y color según el estado real guardado en la base de datos
     val info = infoDeEstado(reporte.report_state)
     val titulo = info.titulo
@@ -232,6 +233,7 @@ fun TarjetaReporte(reporte: ReporteResumen) {
     val tokenMapbox = stringResource(R.string.mapbox_access_token)
 
     Card(
+        onClick = alTocar, // abre el detalle del reporte
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),

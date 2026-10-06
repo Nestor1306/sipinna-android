@@ -19,6 +19,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
+import com.example.sipinnaapp.model.RespuestaDetalle
 
 // Define los endpoints del backend Go (rama main del equipo)
 // Cada función aquí = un endpoint de la API.
@@ -82,4 +83,12 @@ interface ApiService {
     suspend fun misReportes(
         @Header("Cookie") sesion: String
     ): Response<RespuestaMisReportes>
+
+    // GET /report/{folio} → detalle de UNO de mis reportes.
+    // Retrofit codifica el folio en la URL (acentos, espacios), no hay que hacerlo a mano.
+    @GET("report/{folio}")
+    suspend fun detalleReporte(
+        @Header("Cookie") sesion: String,
+        @Path("folio") folio: String
+    ): Response<RespuestaDetalle>
 }
