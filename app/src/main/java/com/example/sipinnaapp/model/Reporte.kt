@@ -17,8 +17,12 @@ data class ReporteRequest(
 )
 
 // Paso 1: respuesta de POST /report → {"reporte_id": "..."}
+
+// Si el reporte es anónimo (sin sesión), además llega "edit_token": la llave que
+// permite subir sus fotos y enviarlo (pasos 2 a 4) sin tener cuenta.
 data class BorradorCreado(
-    @SerializedName("reporte_id") val reporteId: String?
+    @SerializedName("reporte_id") val reporteId: String?,
+    @SerializedName("edit_token") val tokenEdicion: String?
 )
 
 // Paso 2: lo que mandamos a POST /report/{id}/images

@@ -13,10 +13,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 // Los dos corren el MISMO backend (rama main), así que solo cambia la dirección.
 // Normalmente va en false (AWS). Ponlo en true solo para probar con tu Mac.
 // Por ahora en true: AWS está apagado.
-private const val USAR_SERVIDOR_LOCAL = true
+private const val USAR_SERVIDOR_LOCAL = false
 
 private const val URL_LOCAL = "http://127.0.0.1:8081/"
-private const val URL_AWS = "https://api.sipinna.com"
+private const val URL_AWS = "https://api.sipinna.com/"
 
 object RetrofitClient {
 

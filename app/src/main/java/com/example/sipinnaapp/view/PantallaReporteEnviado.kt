@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import androidx.compose.ui.text.style.TextAlign
 import com.example.sipinnaapp.ui.theme.*
 import com.example.sipinnaapp.viewmodel.ReporteVM
 
@@ -67,12 +68,29 @@ fun PantallaReporteEnviado(
 
         Espacio(6.dp)
 
-        Text(
-            text = "Folio: ${estado.folioGenerado}",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+        if (estado.enviadoAnonimo) {
+            // Sin cuenta no hay historial donde consultar el reporte después
+            Text(
+                text = "Enviado de forma anónima",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Espacio(4.dp)
+            Text(
+                text = "Como no iniciaste sesión, no podrás consultar su estado. Crea una cuenta si quieres darle seguimiento a tus próximos reportes.",
+                fontSize = 12.sp,
+                color = GrisTexto,
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Text(
+                text = "Folio: ${estado.folioGenerado}",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        }
 
         // Aviso si alguna foto no se pudo subir (el reporte sí quedó guardado)
         if (estado.avisoFotos.isNotEmpty()) {

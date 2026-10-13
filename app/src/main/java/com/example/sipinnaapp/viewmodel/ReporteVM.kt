@@ -153,7 +153,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     // queda en DRAFT: no aparece en el historial ni lo analiza Jev.)
     private fun sinProgresoDeEnvio(e: EstadoReporte): EstadoReporte {
         if (e.reporteIdBorrador.isBlank()) return e
-        return e.copy(reporteIdBorrador = "", idsImagenes = emptyList(), fotosSubidas = emptySet())
+        return e.copy(reporteIdBorrador = "", tokenEdicion = "", idsImagenes = emptyList(), fotosSubidas = emptySet())
     }
 
     // --- Envío al servidor ---
@@ -171,14 +171,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         val e = _estado.value
         if (e.cargando) return   // evita enviar dos veces con doble toque
 
-        // Las 4 rutas piden sesión en el backend
-        if (token.isBlank()) {
-            _estado.value = e.copy(
-                error = "Por ahora no se pueden enviar reportes sin cuenta. Crea una cuenta o inicia sesión para enviarlo."
-            )
-            return
-        }
-        val sesion = cookieDeSesion(token)
+        // Sin sesión el reporte es anónimo: no se manda cookie y el backend responde una
+        // llave ("edit_token") que se usa en los pasos 2 a 4 en lugar de la sesión.
+        val anonimo = token.isBlank()
+        val sesion: String? = if (anonimo) null else cookieDeSesion(token)
 
         viewModelScope.launch {
             _estado.value = _estado.value.copy(cargando = true, error = "", progresoEnvio = "Creando reporte…")
@@ -195,8 +191,13 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     if (reporteId.isBlank()) {
                         return@launch falloEnPaso(1, null, "El servidor no regresó el id del reporte")
                     }
-                    _estado.value = _estado.value.copy(reporteIdBorrador = reporteId)
+                    val llave = respuesta.body()?.tokenEdicion.orEmpty()
+                    if (anonimo && llave.isBlank()) {
+                        return@launch falloEnPaso(1, null, "El servidor no regresó la llave del reporte anónimo")
+                    }
+                    _estado.value = _estado.value.copy(reporteIdBorrador = reporteId, tokenEdicion = llave)
                 }
+                val llave: String? = _estado.value.tokenEdicion.ifBlank { null }
 
                 // ---- Paso 2: registrar las fotos ----
                 var ids = _estado.value.idsImagenes
@@ -206,7 +207,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     val peticion = RegistroImagenesRequest(
                         e.fotos.indices.map { i -> ImagenPorSubir("foto${i + 1}.jpg", "image/jpeg") }
                     )
-                    val respuesta = RetrofitClient.api.registrarImagenes(sesion, reporteId, peticion)
+                    val respuesta = RetrofitClient.api.registrarImagenes(sesion, llave, reporteId, peticion)
                     if (!respuesta.isSuccessful) {
                         return@launch falloEnPaso(2, respuesta.code(), respuesta.errorBody()?.string())
                     }
@@ -234,7 +235,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                         "foto${indice + 1}.jpg",
                         bytes.toRequestBody("image/jpeg".toMediaType())
                     )
-                    val respuesta = RetrofitClient.api.subirImagen(sesion, reporteId, imagenId, archivo)
+                    val respuesta = RetrofitClient.api.subirImagen(sesion, llave, reporteId, imagenId, archivo)
                     if (!respuesta.isSuccessful || respuesta.body()?.success == false) {
                         return@launch falloEnPaso(
                             3,
@@ -247,19 +248,25 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
                 // ---- Paso 4: enviar (DRAFT → registrado) ----
                 _estado.value = _estado.value.copy(progresoEnvio = "Enviando reporte…")
-                val respuesta = RetrofitClient.api.enviarReporte(sesion, reporteId)
+                val respuesta = RetrofitClient.api.enviarReporte(sesion, llave, reporteId)
                 if (!respuesta.isSuccessful) {
                     return@launch falloEnPaso(4, respuesta.code(), respuesta.errorBody()?.string())
                 }
 
                 // El backend no regresa el folio al crear el reporte, así que lo buscamos
                 // en el historial del usuario: es el enviado más reciente.
-                val folio = folioMasReciente(sesion)
+                // Un reporte anónimo no tiene historial, así que no hay folio que mostrar.
+                val folio = if (sesion != null) folioMasReciente(sesion) else ""
 
                 _estado.value = _estado.value.copy(
                     cargando = false,
                     progresoEnvio = "",
-                    folioGenerado = folio.ifBlank { "Consúltalo en tu historial" },
+                    enviadoAnonimo = anonimo,
+                    folioGenerado = when {
+                        anonimo -> "Anónimo"
+                        folio.isNotBlank() -> folio
+                        else -> "Consúltalo en tu historial"
+                    },
                     estadoGenerado = "registrado",   // todo reporte enviado empieza así
                     avisoFotos = ""
                 )

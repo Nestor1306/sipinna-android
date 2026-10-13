@@ -54,6 +54,7 @@ interface ApiService {
     @POST("report/{report_id}/images")
     suspend fun registrarImagenes(
         @Header("Cookie") sesion: String?,
+        @Header("X-Edit-Token") tokenEdicion: String?,
         @Path("report_id") reporteId: String,
         @Body imagenes: RegistroImagenesRequest
     ): Response<ImagenesRegistradas>
@@ -64,16 +65,17 @@ interface ApiService {
     @PUT("report/{report_id}/images/{image_id}")
     suspend fun subirImagen(
         @Header("Cookie") sesion: String?,
+        @Header("X-Edit-Token") tokenEdicion: String?,
         @Path("report_id") reporteId: String,
         @Path("image_id") imagenId: String,
         @Part archivo: MultipartBody.Part
     ): Response<RespuestaSubidaImagen>
 
     // Paso 4. PUT /report/{id}/submit → el reporte pasa de DRAFT a "registrado".
-    // OJO: el backend solo lo acepta si el reporte tiene al menos una foto ya subida.
     @PUT("report/{report_id}/submit")
     suspend fun enviarReporte(
         @Header("Cookie") sesion: String?,
+        @Header("X-Edit-Token") tokenEdicion: String?,
         @Path("report_id") reporteId: String
     ): Response<Any>
 
