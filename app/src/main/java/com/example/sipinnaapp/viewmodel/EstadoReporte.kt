@@ -35,6 +35,8 @@ data class EstadoReporte(
     // al tocar "Enviar reporte" otra vez se continúe donde se quedó en lugar de
     // crear un reporte duplicado.
     val reporteIdBorrador: String = "",         // paso 1: id del reporte en DRAFT
+    val tokenEdicion: String = "",              // paso 1: llave de un reporte anónimo para los pasos 2 a 4
+    val enviadoAnonimo: Boolean = false,        // el reporte se envió sin cuenta (no tiene folio que consultar)
     val idsImagenes: List<String> = emptyList(), // paso 2: id de cada foto, mismo orden que "fotos"
     val fotosSubidas: Set<String> = emptySet(),  // paso 3: ids de las fotos que ya subieron
 
