@@ -156,7 +156,7 @@ fun PantallaConfirmar(
 
             // Información del niño
             TarjetaResumen {
-                TituloSeccion(Icons.Default.Person, "Información del niño")
+                TituloSeccion(Icons.Default.Person, "Información del Niño/Niña/Adolescente")
                 Espacio(10.dp)
                 EtiquetaGris("Edad aproximada")
                 Espacio(4.dp)

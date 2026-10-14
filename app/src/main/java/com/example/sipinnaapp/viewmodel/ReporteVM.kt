@@ -54,6 +54,9 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         // con al menos una foto subida, así que la pedimos. Si el backend cambia para
         // permitir 0 fotos, basta con poner esto en false.
         const val FOTO_OBLIGATORIA = false
+        const val MIN_PALABRAS = 10          // mínimo de palabras en la descripción
+        const val OPCION_OTRO = "Otro"       // en tipo de trabajo, "Otro" no se combina con las demás
+
         const val LADO_MAXIMO_FOTO = 1600    // pixeles; las fotos se reducen antes de subirlas
 
         // Opciones de la pantalla "Información del niño" (igual que en Figma)
@@ -64,6 +67,25 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             "Vendedor ambulante", "Limpieza de calles", "Cargador / Cargadora",
             "Recolección de basura", "Agricultura / Campo", "Mendicidad", "Construcción", "Otro"
         )
+        // Cuenta palabras separadas por espacios ("  hola   mundo " = 2)
+        fun contarPalabras(texto: String): Int =
+            texto.trim().split(Regex("\\s+")).count { it.isNotBlank() }
+
+        // Qué le falta al paso actual para poder avanzar ("" = está completo).
+        // Las pantallas lo usan para bloquear el botón "Siguiente".
+        fun errorDelPaso(e: EstadoReporte): String = when (e.pasoActual) {
+            1 -> if (e.direccion.isBlank() && e.latitud == 0.0) "Indica la ubicación del reporte" else ""
+            2 -> if (FOTO_OBLIGATORIA && e.fotos.isEmpty()) "Agrega al menos una foto del lugar" else ""
+            3 -> when {
+                e.edadNino.isEmpty() -> "Selecciona la edad aproximada"
+                e.tiposTrabajo.isEmpty() -> "Selecciona al menos un tipo de trabajo"
+                e.condicion.isEmpty() -> "Selecciona en qué condición se encuentra"
+                else -> ""
+            }
+            4 -> if (contarPalabras(e.descripcion) < MIN_PALABRAS) "Describe lo que pasó (mínimo $MIN_PALABRAS palabras)" else ""
+            else -> ""
+        }
+
         val OPCIONES_CONDICION = listOf(
             "Solo / Sola", "Con adultos", "Con otros niños", "Con familiares", "En situación de riesgo"
         )
@@ -163,11 +185,17 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     }
 
     // Se pueden elegir varios: si ya estaba, se quita; si no, se agrega
+    // "Otro" va sola: al elegirla se quitan las demás, y al elegir otra se quita "Otro"
     fun alternarTipoTrabajo(valor: String) {
         val actuales = _estado.value.tiposTrabajo
-        val nuevos = if (valor in actuales) actuales - valor else actuales + valor
+        val nuevos = when {
+            valor in actuales -> actuales - valor
+            valor == OPCION_OTRO -> setOf(OPCION_OTRO)
+            else -> actuales - OPCION_OTRO + valor
+        }
         _estado.value = _estado.value.copy(tiposTrabajo = nuevos)
     }
+
 
     fun seleccionarCondicion(valor: String) {
         _estado.value = _estado.value.copy(condicion = valor)
@@ -185,19 +213,8 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         val e = _estado.value
 
         // Validación del paso en el que estamos antes de avanzar
-        val errorPaso = when (e.pasoActual) {
-            1 -> if (e.direccion.isBlank() && e.latitud == 0.0) "Indica la ubicación del reporte" else ""
-            2 -> if (FOTO_OBLIGATORIA && e.fotos.isEmpty()) "Agrega al menos una foto del lugar" else ""
-            3 -> when {
-                e.edadNino.isEmpty() -> "Selecciona la edad aproximada"
-                e.tiposTrabajo.isEmpty() -> "Selecciona al menos un tipo de trabajo"
-                e.condicion.isEmpty() -> "Selecciona en qué condición se encuentra"
-                else -> ""
-            }
-            4 -> if (e.descripcion.trim().length < 10) "Describe lo que pasó (mínimo 10 caracteres)" else ""
-            else -> ""
-        }
-
+        // (los botones ya se bloquean con esto mismo; aquí es una segunda revisión)
+        val errorPaso = errorDelPaso(e)
         if (errorPaso.isNotEmpty()) {
             _estado.value = e.copy(error = errorPaso)
             return
@@ -207,6 +224,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             _estado.value = e.copy(pasoActual = e.pasoActual + 1)
         }
     }
+
 
     fun pasoAnterior() {
         val actual = _estado.value.pasoActual

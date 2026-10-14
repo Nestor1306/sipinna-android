@@ -145,7 +145,12 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.weight(1f)) {
                     EtiquetaGris("Folio")
-                    Text(detalle.folio ?: "—", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    // Se puede tocar para copiar el folio
+                    if (detalle.folio.isNullOrBlank()) {
+                        Text("—", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    } else {
+                        FolioCopiable(detalle.folio)
+                    }
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     EtiquetaGris("Enviado")

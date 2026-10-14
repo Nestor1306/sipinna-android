@@ -28,7 +28,7 @@ fun PantallaInfoNino(
             .padding(horizontal = 18.dp)
     ) {
         EncabezadoPaso(
-            titulo = "Información del niño",
+            titulo = "Información del Niño/Niña/Adolescente",
             subtitulo = "Estos datos nos ayudan a entender mejor la situación.",
             paso = 3,
             alRegresar = alRegresar
@@ -45,7 +45,7 @@ fun PantallaInfoNino(
             // Pregunta 1: edad (una sola opción)
             EtiquetaPregunta("Pregunta 1")
             Espacio(4.dp)
-            TituloPregunta("¿Cuál es la edad aproximada del niño?")
+            TituloPregunta("¿Cuál es su edad aproximada?")
             Espacio(10.dp)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -67,7 +67,7 @@ fun PantallaInfoNino(
             Espacio(4.dp)
             TituloPregunta("¿Qué tipo de trabajo está realizando?")
             Text(
-                text = "Puedes seleccionar más de una opción",
+                text = "Puedes seleccionar más de una opción (\"Otro\" va sola)",
                 fontSize = 10.sp,
                 color = GrisTexto
             )
@@ -90,7 +90,7 @@ fun PantallaInfoNino(
             // Pregunta 3: condición (una sola opción)
             EtiquetaPregunta("Pregunta 3")
             Espacio(4.dp)
-            TituloPregunta("¿En qué condición se encuentra el niño?")
+            TituloPregunta("¿En qué condición se encuentra?")
             Espacio(10.dp)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -109,7 +109,11 @@ fun PantallaInfoNino(
         }
 
         Espacio(12.dp)
-        BotonPrincipal(texto = "Siguiente", alPresionar = { vm.siguientePaso() })
+        BotonPrincipal(
+            texto = "Siguiente",
+            alPresionar = { vm.siguientePaso() },
+            habilitado = ReporteVM.errorDelPaso(estado).isEmpty()
+        )
         Espacio(24.dp)
     }
 }

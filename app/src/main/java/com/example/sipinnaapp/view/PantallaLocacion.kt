@@ -205,7 +205,7 @@ fun PantallaLocacion(
     ) {
 
         EncabezadoPaso(
-            titulo = "Locación del reporte",
+            titulo = "Ubicación del reporte",
             subtitulo =
                 "Indícanos el lugar exacto del reporte. Puedes tocar el mapa o usar tu ubicación actual.",
             paso = 1,
@@ -324,7 +324,8 @@ fun PantallaLocacion(
             texto = "Confirmar",
             alPresionar = {
                 vm.siguientePaso()
-            }
+            },
+            habilitado = ReporteVM.errorDelPaso(estado).isEmpty()
         )
 
         Espacio(24.dp)

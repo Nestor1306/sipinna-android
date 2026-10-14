@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sipinnaapp.ui.theme.*
 import com.example.sipinnaapp.viewmodel.ReporteVM
+import androidx.compose.ui.draw.alpha
 
 // --- Componentes reutilizables del flujo de reporte (según Figma) ---
 
@@ -105,6 +106,7 @@ fun BotonPrincipal(
         modifier = modifier
             .fillMaxWidth()
             .height(46.dp)
+            .alpha(if (habilitado) 1f else 0.4f)   // deshabilitado se ve deslavado
             .background(
                 brush = Brush.horizontalGradient(
                     listOf(Teal, TealOscuro),

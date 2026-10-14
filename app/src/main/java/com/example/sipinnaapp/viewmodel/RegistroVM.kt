@@ -11,6 +11,16 @@ import com.example.sipinnaapp.network.mensajeDeExcepcion
 import com.example.sipinnaapp.network.mensajeDeRespuesta
 
 class RegistroVM : ViewModel() {
+    companion object {
+        const val MAX_DIGITOS_EDAD = 2
+        const val DIGITOS_TELEFONO = 10   // teléfono de México sin lada internacional
+
+        private val FORMATO_CORREO = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+
+        fun correoValido(correo: String): Boolean = FORMATO_CORREO.matches(correo.trim())
+
+        fun telefonoValido(telefono: String): Boolean = telefono.length == DIGITOS_TELEFONO
+    }
 
     private val _estado = MutableStateFlow(EstadoRegistro())
     val estado: StateFlow<EstadoRegistro> = _estado
@@ -29,12 +39,13 @@ class RegistroVM : ViewModel() {
         _estado.value = _estado.value.copy(genero = valor)
     }
 
+    // Edad y teléfono solo aceptan números: cualquier otro carácter se descarta al escribir
     fun actualizarEdad(valor: String) {
-        _estado.value = _estado.value.copy(edad = valor)
+        _estado.value = _estado.value.copy(edad = valor.filter { it.isDigit() }.take(MAX_DIGITOS_EDAD))
     }
 
     fun actualizarTelefono(valor: String) {
-        _estado.value = _estado.value.copy(telefono = valor)
+        _estado.value = _estado.value.copy(telefono = valor.filter { it.isDigit() }.take(DIGITOS_TELEFONO))
     }
 
     fun actualizarEmail(valor: String) {
@@ -67,8 +78,12 @@ class RegistroVM : ViewModel() {
             _estado.value = _estado.value.copy(error = "Ingresa tu correo o tu teléfono")
             return
         }
-        if (email.isNotEmpty() && !email.contains("@")) {
-            _estado.value = _estado.value.copy(error = "El email no es válido")
+        if (email.isNotEmpty() && !correoValido(email)) {
+            _estado.value = _estado.value.copy(error = "El correo no es válido (ejemplo: tucorreo@ejemplo.com)")
+            return
+        }
+        if (telefono.isNotEmpty() && !telefonoValido(telefono)) {
+            _estado.value = _estado.value.copy(error = "El teléfono debe tener $DIGITOS_TELEFONO dígitos")
             return
         }
         // Reglas de la contraseña (ver ReglasContrasena.kt)

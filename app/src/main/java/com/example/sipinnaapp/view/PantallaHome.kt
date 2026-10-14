@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +30,12 @@ import coil.compose.AsyncImage
 import com.example.sipinnaapp.R
 import com.example.sipinnaapp.model.ReporteResumen
 import com.example.sipinnaapp.ui.theme.*
+import android.widget.Toast
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.TextUnit
 
 @Composable
 fun PantallaHome(
@@ -172,17 +177,6 @@ fun PantallaHome(
                     }
                 }
             }
-        }
-
-        // Botón "≡" abajo a la izquierda
-        BotonCircular(
-            fondo = GrisBotonMenu,
-            alPresionar = { /* pendiente: menú */ },
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 27.dp, bottom = 24.dp)
-        ) {
-            Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.Black, modifier = Modifier.size(30.dp))
         }
 
         // Botón "+" abajo a la derecha (nuevo reporte)
@@ -329,5 +323,28 @@ fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+
+// Folio con un botón para copiarlo (para buscarlo después o compartirlo)
+@Composable
+fun FolioCopiable(folio: String, tamano: TextUnit = 12.sp) {
+    val portapapeles = LocalClipboardManager.current
+    val contexto = LocalContext.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .clickable {
+                portapapeles.setText(AnnotatedString(folio))
+                Toast.makeText(contexto, "Folio copiado", Toast.LENGTH_SHORT).show()
+            }
+            .padding(vertical = 2.dp)
+    ) {
+        Text(folio, fontSize = tamano, fontWeight = FontWeight.Bold, color = Color.Black)
+        Spacer(Modifier.width(6.dp))
+        Icon(Icons.Default.ContentCopy, contentDescription = "Copiar folio", tint = Teal, modifier = Modifier.size(16.dp))
     }
 }

@@ -41,6 +41,7 @@ import com.example.sipinnaapp.viewmodel.RegistroVM
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import com.example.sipinnaapp.viewmodel.requisitosContrasena
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun PantallaRegistro(
@@ -148,15 +149,7 @@ fun PantallaRegistro(
 
             Espacio(14.dp)
 
-            // Género: lista desplegable para elegir una opción
-            SelectorGenero(
-                seleccion = estado.genero,
-                alElegir = { vm.actualizarGenero(it) }
-            )
-
-            Espacio(14.dp)
-
-            // Edad + Teléfono
+            // Edad + Género (el género ya no ocupa toda la fila)
             FilaDeCampos {
                 CampoConIcono(
                     etiqueta = "Edad",
@@ -168,16 +161,31 @@ fun PantallaRegistro(
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(Modifier.width(12.dp))
-                CampoConIcono(
-                    etiqueta = "Teléfono",
-                    valor = estado.telefono,
-                    alCambiar = { vm.actualizarTelefono(it) },
-                    icono = Icons.Default.Phone,
-                    ayuda = "55 1234 5678",
-                    teclado = KeyboardType.Phone,
+                SelectorGenero(
+                    seleccion = estado.genero,
+                    alElegir = { vm.actualizarGenero(it) },
                     modifier = Modifier.weight(1.7f)
                 )
             }
+
+            Espacio(14.dp)
+
+            // Teléfono (ahora ocupa toda la fila); solo números, 10 dígitos
+            CampoConIcono(
+                etiqueta = "Teléfono",
+                valor = estado.telefono,
+                alCambiar = { vm.actualizarTelefono(it) },
+                icono = Icons.Default.Phone,
+                ayuda = "5512345678",
+                teclado = KeyboardType.Number
+            )
+            if (estado.telefono.isNotEmpty() && !RegistroVM.telefonoValido(estado.telefono)) {
+                Espacio(4.dp)
+                Text("Faltan dígitos: el teléfono lleva ${RegistroVM.DIGITOS_TELEFONO}", fontSize = 12.sp, color = RojoNoApto)
+            }
+
+            Espacio(14.dp)
+
 
             Espacio(14.dp)
 
@@ -189,6 +197,10 @@ fun PantallaRegistro(
                 ayuda = "tucorreo@ejemplo.com",
                 teclado = KeyboardType.Email
             )
+            if (estado.email.isNotBlank() && !RegistroVM.correoValido(estado.email)) {
+                Espacio(4.dp)
+                Text("Revisa tu correo (ejemplo: tucorreo@ejemplo.com)", fontSize = 12.sp, color = RojoNoApto)
+            }
 
             Espacio(6.dp)
 
@@ -329,7 +341,7 @@ fun Espacio(altura: Dp) {
 
 // --- Componentes del diseño nuevo de registro ---
 
-val OPCIONES_GENERO = listOf("Masculino", "Femenino")
+val OPCIONES_GENERO = listOf("Masculino", "Femenino", "Otro", "Prefiero no mencionarlo")
 
 // Texto pequeño que va arriba de cada campo ("Nombre", "Correo electrónico"...)
 @Composable
@@ -347,12 +359,22 @@ fun EtiquetaCampo(texto: String) {
 @Composable
 fun SelectorGenero(
     seleccion: String,               // la opción elegida ("" si todavía no elige)
-    alElegir: (String) -> Unit
+    alElegir: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // Recuerda si el menú está abierto o cerrado
     var abierto by remember { mutableStateOf(false) }
 
-    Column {
+    Column(modifier = modifier) {
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = seleccion.ifEmpty { "Selecciona" },
+            fontSize = 14.sp,
+            color = if (seleccion.isEmpty()) GrisTextoClaro else Color.Black,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,   // "Prefiero no mencionarlo" se corta con "…"
+            modifier = Modifier.weight(1f)
+        )
         EtiquetaCampo("Género")
         Espacio(6.dp)
 

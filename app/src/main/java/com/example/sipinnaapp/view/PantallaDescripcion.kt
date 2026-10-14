@@ -13,6 +13,8 @@ import com.example.sipinnaapp.ui.theme.GrisBarra
 import com.example.sipinnaapp.ui.theme.GrisTexto
 import com.example.sipinnaapp.ui.theme.Teal
 import com.example.sipinnaapp.viewmodel.ReporteVM
+import androidx.compose.ui.Alignment
+import com.example.sipinnaapp.ui.theme.VerdeConfirmado
 
 @Composable
 fun PantallaDescripcion(
@@ -60,9 +62,25 @@ fun PantallaDescripcion(
                 .weight(1f)
         )
 
-        Espacio(20.dp)
+        // Contador de palabras: gris mientras falta, verde cuando ya alcanza el mínimo
+        val palabras = ReporteVM.contarPalabras(estado.descripcion)
+        val suficiente = palabras >= ReporteVM.MIN_PALABRAS
+        Espacio(6.dp)
+        Text(
+            text = if (suficiente) "$palabras palabras ✓"
+            else "$palabras de ${ReporteVM.MIN_PALABRAS} palabras mínimo",
+            fontSize = 12.sp,
+            color = if (suficiente) VerdeConfirmado else GrisTexto,
+            modifier = Modifier.align(Alignment.End)
+        )
 
-        BotonPrincipal(texto = "Siguiente", alPresionar = { vm.siguientePaso() })
+        Espacio(14.dp)
+
+        BotonPrincipal(
+            texto = "Siguiente",
+            alPresionar = { vm.siguientePaso() },
+            habilitado = suficiente
+        )
 
         Espacio(24.dp)
     }

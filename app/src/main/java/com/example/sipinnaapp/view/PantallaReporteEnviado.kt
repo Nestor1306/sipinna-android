@@ -92,12 +92,20 @@ fun PantallaReporteEnviado(
                 textAlign = TextAlign.Center
             )
         } else {
-            Text(
-                text = "Folio: ${estado.folioGenerado}",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+                if (estado.folioGenerado.startsWith("RIETI")) {
+                    // Folio real: se puede tocar para copiarlo
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Folio: ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        FolioCopiable(estado.folioGenerado, tamano = 14.sp)
+                    }
+                } else {
+                    Text(
+                        text = "Folio: ${estado.folioGenerado}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
         }
 
         // Aviso si alguna foto no se pudo subir (el reporte sí quedó guardado)
