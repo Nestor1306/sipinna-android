@@ -36,7 +36,10 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaHome(
     reportes: List<ReporteResumen>,
@@ -46,17 +49,29 @@ fun PantallaHome(
     alHacerReporte: () -> Unit,
     alIrAPerfil: () -> Unit,
     alAbrirReporte: (ReporteResumen) -> Unit,
+    alRefrescar: () -> Unit,
     avisoSinConexion: String,       // "" = hay conexión; si no, se muestra arriba de las tarjetas
     modifier: Modifier = Modifier
 ) {
     var busqueda by remember { mutableStateOf("") }
+    var filtroEstado by remember { mutableStateOf<String?>(null) }   // null = todos
+    var masAntiguosPrimero by remember { mutableStateOf(false) }
+    var menuFiltroAbierto by remember { mutableStateOf(false) }
+    // Solo para el gesto de "jalar para actualizar" (la actualización automática no muestra el círculo)
+    var refrescando by remember { mutableStateOf(false) }
+    LaunchedEffect(cargando) { if (!cargando) refrescando = false }
 
-    // Filtra las tarjetas por lo que se escribe en el buscador
-    val reportesFiltrados = if (busqueda.isBlank()) reportes
-    else reportes.filter {
-        (it.description ?: "").contains(busqueda, ignoreCase = true) ||
-        (it.folio ?: "").contains(busqueda, ignoreCase = true)
-    }
+
+    // La lista ya llega de más reciente a más antiguo (pendientes arriba, luego por folio).
+    // Aquí se aplica el buscador, el filtro de estado y el orden elegido.
+    val reportesFiltrados = reportes
+        .filter {
+            busqueda.isBlank() ||
+                    (it.description ?: "").contains(busqueda, ignoreCase = true) ||
+                    (it.folio ?: "").contains(busqueda, ignoreCase = true)
+        }
+        .filter { filtroEstado == null || it.report_state == filtroEstado }
+        .let { if (masAntiguosPrimero) it.reversed() else it }
 
     Box(
         modifier = modifier
@@ -108,7 +123,55 @@ fun PantallaHome(
                     placeholder = "Busca por folio o descripción",
                     modifier = Modifier.weight(1f)
                 )
-                BotonFiltro(alPresionar = { /* pendiente: filtros */ })
+                // Botón de filtro con su menú
+                Box {
+                    BotonFiltro(
+                        alPresionar = { menuFiltroAbierto = true },
+                        activo = filtroEstado != null || masAntiguosPrimero
+                    )
+                    DropdownMenu(
+                        expanded = menuFiltroAbierto,
+                        onDismissRequest = { menuFiltroAbierto = false }
+                    ) {
+                        Text(
+                            "Estado",
+                            fontSize = 12.sp,
+                            color = GrisTexto,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                        (listOf(null to "Todos") + ESTADOS_REPORTE).forEach { (valor, etiqueta) ->
+                            DropdownMenuItem(
+                                text = { Text(etiqueta) },
+                                leadingIcon = {
+                                    if (filtroEstado == valor) Icon(Icons.Default.Check, contentDescription = null, tint = Teal)
+                                },
+                                onClick = {
+                                    filtroEstado = valor
+                                    menuFiltroAbierto = false
+                                }
+                            )
+                        }
+                        HorizontalDivider()
+                        Text(
+                            "Orden",
+                            fontSize = 12.sp,
+                            color = GrisTexto,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                        listOf(false to "Más recientes primero", true to "Más antiguos primero").forEach { (antiguos, etiqueta) ->
+                            DropdownMenuItem(
+                                text = { Text(etiqueta) },
+                                leadingIcon = {
+                                    if (masAntiguosPrimero == antiguos) Icon(Icons.Default.Check, contentDescription = null, tint = Teal)
+                                },
+                                onClick = {
+                                    masAntiguosPrimero = antiguos
+                                    menuFiltroAbierto = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
             }
 
@@ -148,8 +211,9 @@ fun PantallaHome(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
+                        .padding(bottom = 106.dp)   // compensa el encabezado para quedar al centro de la pantalla
                 ) {
-                    Image(
+                Image(
                         painter = painterResource(id = R.drawable.sipinna_logo),
                         contentDescription = null,
                         modifier = Modifier.size(90.dp)
@@ -169,13 +233,22 @@ fun PantallaHome(
                     )
                 }
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(15.dp),
-                    contentPadding = PaddingValues(bottom = 100.dp),
+                PullToRefreshBox(
+                    isRefreshing = refrescando,
+                    onRefresh = {
+                        refrescando = true
+                        alRefrescar()
+                    },
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(reportesFiltrados) { reporte ->
-                        TarjetaReporte(reporte, alTocar = { alAbrirReporte(reporte) })
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(15.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(reportesFiltrados) { reporte ->
+                            TarjetaReporte(reporte, alTocar = { alAbrirReporte(reporte) })
+                        }
                     }
                 }
             }
@@ -196,20 +269,20 @@ fun PantallaHome(
 
 // Pastilla gris con el ícono de filtro (a la derecha del buscador)
 @Composable
-fun BotonFiltro(alPresionar: () -> Unit) {
+fun BotonFiltro(alPresionar: () -> Unit, activo: Boolean = false) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .width(74.dp)
             .height(50.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(SuperficieSecundaria)
+            .background(if (activo) Teal else SuperficieSecundaria)
             .clickable(onClick = alPresionar)
     ) {
         Icon(
             imageVector = Icons.Default.FilterList,
-            contentDescription = "Filtrar",
-            tint = Color.Black,
+            contentDescription = if (activo) "Filtrar (hay un filtro activo)" else "Filtrar",
+            tint = if (activo) Color.White else Color.Black,
             modifier = Modifier.size(20.dp)
         )
     }

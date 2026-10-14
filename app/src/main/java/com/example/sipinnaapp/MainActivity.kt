@@ -32,9 +32,14 @@ import com.example.sipinnaapp.viewmodel.ReporteVM
 import com.example.sipinnaapp.view.PantallaDetalleReporte
 import com.example.sipinnaapp.worker.EnvioPendientesWorker
 import com.example.sipinnaapp.view.PantallaAvisoAnonimo
-
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
+// Cada cuánto se vuelve a pedir el historial mientras el Home está abierto (milisegundos)
+const val INTERVALO_ACTUALIZACION = 30_000L
 
 class MainActivity : ComponentActivity() {
 
@@ -101,13 +106,19 @@ fun AppNavegacion(
         }
     }
 
-    // Cada vez que entramos al Home pedimos el historial a la base de datos
-    // y revisamos qué reportes siguen guardados sin enviar
+    // Mientras el Home esté en pantalla, el historial se pide ahora y luego cada 30 s,
+    // así los cambios de estado aparecen solos. Si el usuario sale de la app se pausa,
+    // y al volver se actualiza de inmediato.
+    val cicloDeVida = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(pantallaActual, estadoLogin.token) {
-        if (pantallaActual == "home") {
-            reporteVM.refrescarPendientes()
-            if (estadoLogin.token.isNotBlank()) {
+        if (pantallaActual != "home") return@LaunchedEffect
+        reporteVM.refrescarPendientes()
+        if (estadoLogin.token.isBlank()) return@LaunchedEffect
+
+        cicloDeVida.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
                 reporteVM.cargarHistorial(estadoLogin.token)
+                delay(INTERVALO_ACTUALIZACION)
             }
         }
     }
@@ -169,6 +180,10 @@ fun AppNavegacion(
                     folioAbierto = reporte.folio
                     reporteVM.cargarDetalle(estadoLogin.token, folioAbierto)
                     pantallaActual = "detalle"
+                },
+                alRefrescar = {
+                    reporteVM.refrescarPendientes()
+                    if (estadoLogin.token.isNotBlank()) reporteVM.cargarHistorial(estadoLogin.token)
                 },
                 modifier = modifier
             )
