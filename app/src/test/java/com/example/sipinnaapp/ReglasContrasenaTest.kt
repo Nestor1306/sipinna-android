@@ -2,11 +2,12 @@ package com.example.sipinnaapp
 
 import com.example.sipinnaapp.viewmodel.contrasenaValida
 import com.example.sipinnaapp.viewmodel.errorDeContrasena
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+
 
 class ReglasContrasenaTest {
 
