@@ -31,6 +31,7 @@ import com.example.sipinnaapp.viewmodel.RegistroVM
 import com.example.sipinnaapp.viewmodel.ReporteVM
 import com.example.sipinnaapp.view.PantallaDetalleReporte
 import com.example.sipinnaapp.worker.EnvioPendientesWorker
+import com.example.sipinnaapp.view.PantallaAvisoAnonimo
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -122,12 +123,19 @@ fun AppNavegacion(
             "login" -> PantallaLogin(
                 vm = loginVM,
                 alIrARegistro = { pantallaActual = "registro" },
-                alEntrarAnonimo = {
+                alEntrarAnonimo = { pantallaActual = "avisoAnonimo" },
+                modifier = modifier
+            )
+            "avisoAnonimo" -> PantallaAvisoAnonimo(
+                alContinuarAnonimo = {
                     loginVM.entrarAnonimo()
                     pantallaActual = "home"
                 },
+                alCrearCuenta = { pantallaActual = "registro" },
+                alRegresar = { pantallaActual = "login" },
                 modifier = modifier
             )
+
             "registro" -> PantallaRegistro(
                 vm = registroVM,
                 alIrALogin = { pantallaActual = "login" },

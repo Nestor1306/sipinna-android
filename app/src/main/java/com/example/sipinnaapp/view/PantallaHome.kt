@@ -96,6 +96,7 @@ fun PantallaHome(
             Espacio(28.dp)
 
             // Buscador + botón de filtro
+            if (!esAnonimo){
             Row(
                 horizontalArrangement = Arrangement.spacedBy(9.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -108,6 +109,7 @@ fun PantallaHome(
                     modifier = Modifier.weight(1f)
                 )
                 BotonFiltro(alPresionar = { /* pendiente: filtros */ })
+            }
             }
 
             Espacio(if (avisoSinConexion.isEmpty()) 24.dp else 12.dp)
