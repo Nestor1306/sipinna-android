@@ -38,6 +38,9 @@ import androidx.compose.ui.unit.sp
 import com.example.sipinnaapp.R
 import com.example.sipinnaapp.ui.theme.*
 import com.example.sipinnaapp.viewmodel.RegistroVM
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import com.example.sipinnaapp.viewmodel.requisitosContrasena
 
 @Composable
 fun PantallaRegistro(
@@ -201,8 +204,11 @@ fun PantallaRegistro(
                 etiqueta = "Contraseña",
                 valor = estado.password,
                 alCambiar = { vm.actualizarPassword(it) },
-                ayuda = "Mínimo 6 caracteres"
+                ayuda = "Mínimo 10 caracteres"
             )
+            // Lista de requisitos que se van palomeando mientras escribe
+            Espacio(8.dp)
+            RequisitosContrasena(estado.password)
 
             Espacio(14.dp)
 
@@ -212,6 +218,11 @@ fun PantallaRegistro(
                 alCambiar = { vm.actualizarConfirmarPassword(it) },
                 ayuda = "Repite tu contraseña"
             )
+            // Aviso en cuanto la confirmación deja de coincidir      ← AQUÍ
+            if (estado.confirmarPassword.isNotEmpty() && estado.confirmarPassword != estado.password) {
+                Espacio(6.dp)
+                Text("Las contraseñas no coinciden", fontSize = 12.sp, color = RojoNoApto)
+            }
 
             Espacio(24.dp)
 
@@ -423,6 +434,26 @@ fun CampoConIcono(
 
 // Campo de contraseña con candado a la izquierda y un "ojo" a la derecha
 // para mostrar u ocultar lo que se escribe
+// Requisitos de la contraseña: gris mientras falta, verde con palomita cuando se cumple
+@Composable
+fun RequisitosContrasena(contrasena: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        requisitosContrasena(contrasena).forEach { requisito ->
+            val color = if (requisito.cumple) VerdeConfirmado else GrisTexto
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (requisito.cumple) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = if (requisito.cumple) "Cumple" else "Falta",
+                    tint = color,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(requisito.texto, fontSize = 12.sp, color = color)
+            }
+        }
+    }
+}
+
 @Composable
 fun CampoPasswordConOjo(
     etiqueta: String,

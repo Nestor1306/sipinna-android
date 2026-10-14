@@ -71,10 +71,13 @@ class RegistroVM : ViewModel() {
             _estado.value = _estado.value.copy(error = "El email no es válido")
             return
         }
-        if (password.length < 6) {
-            _estado.value = _estado.value.copy(error = "La contraseña debe tener al menos 6 caracteres")
+        // Reglas de la contraseña (ver ReglasContrasena.kt)
+        val errorContrasena = errorDeContrasena(password)
+        if (errorContrasena != null) {
+            _estado.value = _estado.value.copy(error = errorContrasena)
             return
         }
+
         if (password != _estado.value.confirmarPassword) {
             _estado.value = _estado.value.copy(error = "Las contraseñas no coinciden")
             return
