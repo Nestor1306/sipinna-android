@@ -41,6 +41,7 @@ fun PantallaHome(
     alHacerReporte: () -> Unit,
     alIrAPerfil: () -> Unit,
     alAbrirReporte: (ReporteResumen) -> Unit,
+    avisoSinConexion: String,       // "" = hay conexión; si no, se muestra arriba de las tarjetas
     modifier: Modifier = Modifier
 ) {
     var busqueda by remember { mutableStateOf("") }
@@ -104,7 +105,23 @@ fun PantallaHome(
                 BotonFiltro(alPresionar = { /* pendiente: filtros */ })
             }
 
-            Espacio(24.dp)
+            Espacio(if (avisoSinConexion.isEmpty()) 24.dp else 12.dp)
+
+            // Aviso cuando lo que se ve es la copia guardada en el teléfono
+            if (avisoSinConexion.isNotEmpty()) {
+                Text(
+                    text = avisoSinConexion,
+                    fontSize = 12.sp,
+                    color = GrisTexto,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SuperficieSecundaria)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+                Espacio(12.dp)
+            }
 
             // Tarjetas de reportes
             if (cargando && reportes.isEmpty()) {

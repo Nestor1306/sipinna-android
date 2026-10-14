@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.sipinnaapp.ui.theme.AmarilloProgreso
 import com.example.sipinnaapp.ui.theme.RojoNoApto
 import com.example.sipinnaapp.ui.theme.VerdeConfirmado
+import com.example.sipinnaapp.ui.theme.GrisIcono
 
 // Cómo se ve cada estado del reporte en pantalla
 data class InfoEstado(
@@ -16,6 +17,12 @@ data class InfoEstado(
 // en una de las 3 tarjetas del Figma: en progreso, confirmado o no apto.
 fun infoDeEstado(estado: String?): InfoEstado {
     return when (estado) {
+        // Se guardó en el teléfono sin internet (no viene de la base de datos)
+        "pendiente_envio" -> InfoEstado(
+            titulo = "Pendiente de envío",
+            color = GrisIcono,
+            detalle = "Sin conexión. Se enviará automáticamente cuando haya internet."
+        )
         // Ya lo revisaron y le están dando seguimiento
         "en_seguimiento", "canalizado", "concluido", "reincidente" -> InfoEstado(
             titulo = "Reporte confirmado",

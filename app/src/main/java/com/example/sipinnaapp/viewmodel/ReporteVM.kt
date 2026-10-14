@@ -27,6 +27,16 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.sipinnaapp.data.CacheHistorial
+import java.io.IOException
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import androidx.work.WorkManager
+import com.example.sipinnaapp.data.ReportesPendientes
+import com.example.sipinnaapp.model.ReporteResumen
+import com.example.sipinnaapp.worker.EnvioPendientesWorker
 
 // Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
 class ReporteVM(application: Application) : AndroidViewModel(application) {
@@ -57,6 +67,68 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         val OPCIONES_CONDICION = listOf(
             "Solo / Sola", "Con adultos", "Con otros niños", "Con familiares", "En situación de riesgo"
         )
+    }
+    // Último token con el que se pidió el historial (para recargarlo al volver el internet)
+    private var ultimoToken = ""
+
+    // Android nos avisa en cuanto el teléfono pierde o recupera la red
+    private val conectividad =
+        application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    private val vigilanteDeRed = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) = cambioDeConexion(true)
+        override fun onLost(network: Network) = cambioDeConexion(false)
+    }
+
+    init {
+        _estado.value = _estado.value.copy(sinInternet = !hayInternet())
+        conectividad.registerDefaultNetworkCallback(vigilanteDeRed)
+
+        refrescarPendientes()
+
+        // Cada vez que el envío en segundo plano avanza, se actualiza el Home:
+        // los pendientes que ya se enviaron desaparecen y aparecen en el historial
+        viewModelScope.launch {
+            WorkManager.getInstance(application)
+                .getWorkInfosForUniqueWorkFlow(EnvioPendientesWorker.NOMBRE)
+                .collect { trabajos ->
+                    refrescarPendientes()
+                    if (trabajos.any { it.state.isFinished } && ultimoToken.isNotBlank()) {
+                        cargarHistorial(ultimoToken)
+                    }
+                }
+        }
+    }
+
+
+    override fun onCleared() {
+        conectividad.unregisterNetworkCallback(vigilanteDeRed)
+        super.onCleared()
+    }
+
+    // ¿El teléfono tiene alguna red con internet (Wi-Fi o datos)?
+    private fun hayInternet(): Boolean {
+        val capacidades = conectividad.getNetworkCapabilities(conectividad.activeNetwork) ?: return false
+        return capacidades.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    // Se llama cada vez que cambia la red
+    private fun cambioDeConexion(conInternet: Boolean) {
+        viewModelScope.launch {
+            val antes = _estado.value.sinInternet
+            _estado.value = _estado.value.copy(sinInternet = !conInternet)
+
+            if (!conInternet && _estado.value.historial.isEmpty()) {
+                // Se fue el internet y no hay nada en pantalla: mostramos la copia guardada
+                val copia = withContext(Dispatchers.IO) { CacheHistorial.leer(getApplication()) }
+                if (copia.isNotEmpty()) {
+                    _estado.value = _estado.value.copy(historial = copia, historialSinConexion = true)
+                }
+            } else if (conInternet && antes && ultimoToken.isNotBlank()) {
+                // Volvió el internet: actualizamos con los datos del servidor
+                cargarHistorial(ultimoToken)
+            }
+        }
     }
 
     // --- Paso 1: Locación ---
@@ -176,6 +248,12 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         val anonimo = token.isBlank()
         val sesion: String? = if (anonimo) null else cookieDeSesion(token)
 
+        // Sin internet ni lo intentamos: se guarda en el teléfono y se envía solo después
+        if (!hayInternet()) {
+            viewModelScope.launch { guardarParaDespues(e, token) }
+            return
+        }
+
         viewModelScope.launch {
             _estado.value = _estado.value.copy(cargando = true, error = "", progresoEnvio = "Creando reporte…")
 
@@ -270,6 +348,11 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     estadoGenerado = "registrado",   // todo reporte enviado empieza así
                     avisoFotos = ""
                 )
+            } catch (ex: IOException) {
+                // Se cayó el internet a medio envío: lo guardamos para enviarlo después
+                Log.e("SIPINNA", "Sin conexión al enviar, se guarda como pendiente", ex)
+                guardarParaDespues(e, token)
+
             } catch (ex: Exception) {
                 _estado.value = _estado.value.copy(
                     cargando = false,
@@ -279,6 +362,57 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    // Guarda el reporte (con sus fotos ya reducidas) en el teléfono y le pide a
+    // WorkManager que lo envíe en cuanto haya conexión
+    private suspend fun guardarParaDespues(e: EstadoReporte, token: String) {
+        val app = getApplication<Application>()
+        _estado.value = _estado.value.copy(cargando = true, error = "", progresoEnvio = "Guardando reporte…")
+
+        try {
+            val fotos = e.fotos.mapNotNull { prepararFoto(it) }
+            withContext(Dispatchers.IO) {
+                ReportesPendientes.guardar(app, armarPeticion(e), fotos, token)
+            }
+            EnvioPendientesWorker.programar(app)
+            refrescarPendientes()
+
+            _estado.value = _estado.value.copy(
+                cargando = false,
+                progresoEnvio = "",
+                guardadoSinConexion = true,
+                enviadoAnonimo = token.isBlank(),
+                folioGenerado = "Pendiente de envío",   // muestra la pantalla final
+                estadoGenerado = "pendiente_envio"
+            )
+        } catch (ex: Exception) {
+            Log.e("SIPINNA", "No se pudo guardar el reporte pendiente", ex)
+            _estado.value = _estado.value.copy(
+                cargando = false,
+                progresoEnvio = "",
+                error = "No hay conexión y no se pudo guardar el reporte en el teléfono. Inténtalo de nuevo."
+            )
+        }
+    }
+
+    // Lee del teléfono los reportes que faltan por enviar (para mostrarlos en el Home)
+    fun refrescarPendientes() {
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            val pendientes = withContext(Dispatchers.IO) { ReportesPendientes.listar(app) }
+            _estado.value = _estado.value.copy(
+                pendientes = pendientes.reversed().map { p ->   // el más nuevo arriba
+                    ReporteResumen(
+                        folio = null,
+                        report_state = "pendiente_envio",
+                        latitude = p.peticion.latitude,
+                        longitude = p.peticion.longitude,
+                        description = p.peticion.description
+                    )
+                }
+            )
+        }
+    }
+
 
     // Arma el JSON del paso 1. La dirección escrita y la condición no tienen columna en la
     // base, así que van al final de la descripción para no perderlas.
@@ -366,6 +500,9 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         // Los anónimos no tienen historial
         if (token.isBlank()) return
 
+        val app = getApplication<Application>()
+        ultimoToken = token
+
         viewModelScope.launch {
             _estado.value = _estado.value.copy(cargandoHistorial = true, errorHistorial = "")
 
@@ -379,17 +516,31 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     // con cada reporte ("RIETI-ATIZAPAN-2026-000007"), así que ordenamos
                     // por ese número para dejar arriba los más recientes.
                     // Los borradores (DRAFT) son envíos que no se terminaron: no se muestran.
+                    val historial = reportes
+                        .filter { it.report_state != "DRAFT" }
+                        .sortedByDescending { consecutivoDeFolio(it.folio) }
+
+                    // Copia en el teléfono para poder verlo sin internet
+                    withContext(Dispatchers.IO) { runCatching { CacheHistorial.guardar(app, historial) } }
+
                     _estado.value = _estado.value.copy(
                         cargandoHistorial = false,
-                        historial = reportes
-                            .filter { it.report_state != "DRAFT" }
-                            .sortedByDescending { consecutivoDeFolio(it.folio) }
+                        historialSinConexion = false,
+                        historial = historial
                     )
                 } else {
                     _estado.value = _estado.value.copy(
                         cargandoHistorial = false,
                         errorHistorial = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
                     )
+                }
+            } catch (ex: IOException) {
+                // Sin internet: mostramos la última copia guardada, si hay
+                val copia = withContext(Dispatchers.IO) { CacheHistorial.leer(app) }
+                _estado.value = if (copia.isNotEmpty()) {
+                    _estado.value.copy(cargandoHistorial = false, historial = copia, historialSinConexion = true)
+                } else {
+                    _estado.value.copy(cargandoHistorial = false, errorHistorial = mensajeDeExcepcion(ex))
                 }
             } catch (ex: Exception) {
                 _estado.value = _estado.value.copy(
@@ -436,7 +587,12 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     // Al cerrar sesión se borra todo, para que otro usuario no vea estos reportes
     fun limpiarTodo() {
-        _estado.value = EstadoReporte()
+        ultimoToken = ""
+        CacheHistorial.borrar(getApplication())
+        _estado.value = EstadoReporte(
+            sinInternet = _estado.value.sinInternet,
+            pendientes = _estado.value.pendientes
+        )
     }
 
     fun cerrarError() {
@@ -446,6 +602,13 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     // Limpia el formulario pero conserva el historial de reportes enviados.
     // (Al volver al Home, el historial se vuelve a pedir a la base de datos.)
     fun nuevoReporte() {
-        _estado.value = EstadoReporte(historial = _estado.value.historial)
+        val e = _estado.value
+        _estado.value = EstadoReporte(
+            historial = e.historial,
+            historialSinConexion = e.historialSinConexion,
+            sinInternet = e.sinInternet,
+            pendientes = e.pendientes
+        )
     }
 }
+

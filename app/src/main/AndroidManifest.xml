@@ -5,6 +5,8 @@
 
     <!-- Internet: necesario para Google Maps y para tu backend -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Saber si hay conexión (para guardar el reporte y enviarlo después) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Permisos de ubicación -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

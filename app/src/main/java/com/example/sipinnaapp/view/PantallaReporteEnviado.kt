@@ -49,10 +49,10 @@ fun PantallaReporteEnviado(
         }
 
         Text(
-            text = "Reporte enviado",
+            text = if (estado.guardadoSinConexion) "Reporte guardado" else "Reporte enviado",
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
-            color = VerdeConfirmado
+            color = if (estado.guardadoSinConexion) AmarilloProgreso else VerdeConfirmado
         )
 
         Espacio(6.dp)
@@ -68,7 +68,15 @@ fun PantallaReporteEnviado(
 
         Espacio(6.dp)
 
-        if (estado.enviadoAnonimo) {
+        if (estado.guardadoSinConexion) {
+            // No había internet: quedó guardado en el teléfono
+            Text(
+                text = "No hay conexión a internet. Tu reporte quedó guardado en el teléfono y se enviará automáticamente en cuanto vuelva la conexión, aunque cierres la app.",
+                fontSize = 12.sp,
+                color = GrisTexto,
+                textAlign = TextAlign.Center
+            )
+        } else if (estado.enviadoAnonimo) {
             // Sin cuenta no hay historial donde consultar el reporte después
             Text(
                 text = "Enviado de forma anónima",

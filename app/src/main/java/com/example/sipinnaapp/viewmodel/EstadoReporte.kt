@@ -36,7 +36,8 @@ data class EstadoReporte(
     // crear un reporte duplicado.
     val reporteIdBorrador: String = "",         // paso 1: id del reporte en DRAFT
     val tokenEdicion: String = "",              // paso 1: llave de un reporte anónimo para los pasos 2 a 4
-    val enviadoAnonimo: Boolean = false,        // el reporte se envió sin cuenta (no tiene folio que consultar)
+    val enviadoAnonimo: Boolean = false, // el reporte se envió sin cuenta (no tiene folio que consultar)
+    val guardadoSinConexion: Boolean = false,   // no había internet: se guardó y se enviará solo después
     val idsImagenes: List<String> = emptyList(), // paso 2: id de cada foto, mismo orden que "fotos"
     val fotosSubidas: Set<String> = emptySet(),  // paso 3: ids de las fotos que ya subieron
 
@@ -44,6 +45,10 @@ data class EstadoReporte(
     val historial: List<ReporteResumen> = emptyList(),
     val cargandoHistorial: Boolean = false,
     val errorHistorial: String = "",
+    val historialSinConexion: Boolean = false,  // el historial que se ve es la copia guardada (no hay internet)
+    val sinInternet: Boolean = false,           // el teléfono no tiene red en este momento
+    // Reportes guardados en el teléfono que aún no se envían (ver ReportesPendientes)
+    val pendientes: List<ReporteResumen> = emptyList(),
 
     // Detalle del reporte que se tocó en el Home (viene de GET /report/{folio})
     val detalle: ReporteDetalle? = null,

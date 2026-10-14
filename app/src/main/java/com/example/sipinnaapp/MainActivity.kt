@@ -30,6 +30,7 @@ import com.example.sipinnaapp.viewmodel.LoginVM
 import com.example.sipinnaapp.viewmodel.RegistroVM
 import com.example.sipinnaapp.viewmodel.ReporteVM
 import com.example.sipinnaapp.view.PantallaDetalleReporte
+import com.example.sipinnaapp.worker.EnvioPendientesWorker
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -43,6 +44,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Si quedaron reportes guardados sin internet, se programa su envío
+        EnvioPendientesWorker.programar(applicationContext)
+
         setContent {
             SipinnaAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -96,9 +101,13 @@ fun AppNavegacion(
     }
 
     // Cada vez que entramos al Home pedimos el historial a la base de datos
+    // y revisamos qué reportes siguen guardados sin enviar
     LaunchedEffect(pantallaActual, estadoLogin.token) {
-        if (pantallaActual == "home" && estadoLogin.token.isNotBlank()) {
-            reporteVM.cargarHistorial(estadoLogin.token)
+        if (pantallaActual == "home") {
+            reporteVM.refrescarPendientes()
+            if (estadoLogin.token.isNotBlank()) {
+                reporteVM.cargarHistorial(estadoLogin.token)
+            }
         }
     }
 
@@ -125,7 +134,8 @@ fun AppNavegacion(
                 modifier = modifier
             )
             "home" -> PantallaHome(
-                reportes = if (estadoLogin.esAnonimo) {
+                // Arriba los que faltan por enviar, abajo los que ya están en el servidor
+                reportes = estadoReporte.pendientes + if (estadoLogin.esAnonimo) {
                     emptyList()
                 } else {
                     estadoReporte.historial
@@ -133,13 +143,22 @@ fun AppNavegacion(
                 cargando = estadoReporte.cargandoHistorial,
                 mensajeError = estadoReporte.errorHistorial,
                 esAnonimo = estadoLogin.esAnonimo,
+                avisoSinConexion = when {
+                    estadoReporte.sinInternet ->
+                        "Sin conexión a internet. Se muestran tus reportes guardados en el teléfono."
+                    estadoReporte.historialSinConexion ->
+                        "No se pudo conectar con el servidor. Se muestran tus reportes guardados."
+                    else -> ""
+                },
                 alHacerReporte = {
                     reporteVM.nuevoReporte()
                     pantallaActual = "reporte"
                 },
                 alIrAPerfil = { pantallaActual = "perfil" },
                 alAbrirReporte = { reporte ->
-                    folioAbierto = reporte.folio ?: ""
+                    // Los pendientes aún no existen en el servidor: no tienen detalle que abrir
+                    if (reporte.folio.isNullOrBlank()) return@PantallaHome
+                    folioAbierto = reporte.folio
                     reporteVM.cargarDetalle(estadoLogin.token, folioAbierto)
                     pantallaActual = "detalle"
                 },
