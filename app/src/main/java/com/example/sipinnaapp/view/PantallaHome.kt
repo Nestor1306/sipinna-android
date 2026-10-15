@@ -254,16 +254,18 @@ fun PantallaHome(
             }
         }
 
-        // Botón "+" abajo a la derecha (nuevo reporte)
-        BotonCircular(
-            fondo = AzulBoton,
-            alPresionar = alHacerReporte,
+        // Botón para hacer un reporte nuevo (abajo a la derecha), con texto para que se entienda
+        ExtendedFloatingActionButton(
+            onClick = alHacerReporte,
+            containerColor = AzulBoton,      // o Teal, para que combine con el resto de la app
+            contentColor = Color.White,
+            shape = RoundedCornerShape(32.dp),
+            icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(26.dp)) },
+            text = { Text("Hacer reporte", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 24.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Nuevo reporte", tint = Color.White, modifier = Modifier.size(34.dp))
-        }
+        )
     }
 }
 
