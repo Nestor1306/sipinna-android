@@ -21,6 +21,8 @@ data class EstadoReporte(
 
     // Paso 4: Descripción
     val descripcion: String = "",
+    // Cuándo vio el usuario la situación (milisegundos). null = "ahora" (al enviar)
+    val fechaAvistamiento: Long? = null,
 
     // Control de pantalla
     val pasoActual: Int = 1,        // 1 = locación ... 5 = confirmar

@@ -25,7 +25,9 @@ import com.example.sipinnaapp.viewmodel.ReporteVM
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
+import androidx.compose.foundation.clickable
+import java.util.Calendar
+import java.util.TimeZone
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaConfirmar(
@@ -35,8 +37,20 @@ fun PantallaConfirmar(
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
-    val fecha = remember { SimpleDateFormat("d MMM yyyy · HH:mm", Locale("es", "MX")).format(Date()) }
+    val formatoFecha = remember { SimpleDateFormat("d MMM yyyy · h:mm a", Locale("es", "MX")) }
+    val fecha = formatoFecha.format(Date(estado.fechaAvistamiento ?: System.currentTimeMillis()))
+    var mostrarSelectorFecha by remember { mutableStateOf(false) }
 
+    if (mostrarSelectorFecha) {
+        SelectorFechaHora(
+            fechaActual = estado.fechaAvistamiento ?: System.currentTimeMillis(),
+            alElegir = {
+                vm.cambiarFechaAvistamiento(it)
+                mostrarSelectorFecha = false
+            },
+            alCerrar = { mostrarSelectorFecha = false }
+        )
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -79,9 +93,25 @@ fun PantallaConfirmar(
                         EtiquetaGris("Folio")
                         Text("Se asigna al enviar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        EtiquetaGris("Fecha")
-                        Text(fecha, fontSize = 12.sp, color = GrisTexto)
+                    // Se toca para cambiar cuándo se vio la situación
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable(enabled = !estado.cargando) { mostrarSelectorFecha = true }
+                            .padding(4.dp)
+                    ) {
+                        EtiquetaGris("Fecha y hora")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(fecha, fontSize = 12.sp, color = Color.Black)
+                            Spacer(Modifier.width(4.dp))
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Cambiar fecha y hora",
+                                tint = Teal,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -268,5 +298,77 @@ fun ChipResumen(texto: String) {
             .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
         Text(texto, fontSize = 11.sp, color = TealOscuro, fontWeight = FontWeight.Medium)
+    }
+}
+
+// Calendario y luego reloj para elegir cuándo se vio la situación.
+// No deja elegir días futuros; si la hora queda en el futuro, el ViewModel lo rechaza.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectorFechaHora(
+    fechaActual: Long,
+    alElegir: (Long) -> Unit,
+    alCerrar: () -> Unit
+) {
+    var eligiendoHora by remember { mutableStateOf(false) }
+    val actual = remember { Calendar.getInstance().apply { timeInMillis = fechaActual } }
+
+    // El calendario de Material trabaja en UTC: el día local se pasa como medianoche UTC
+    val estadoFecha = rememberDatePickerState(
+        initialSelectedDateMillis = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            clear()
+            set(actual.get(Calendar.YEAR), actual.get(Calendar.MONTH), actual.get(Calendar.DAY_OF_MONTH))
+        }.timeInMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) =
+                utcTimeMillis <= System.currentTimeMillis()
+        }
+    )
+    val estadoHora = rememberTimePickerState(
+        initialHour = actual.get(Calendar.HOUR_OF_DAY),
+        initialMinute = actual.get(Calendar.MINUTE),
+        is24Hour = false
+    )
+
+    if (!eligiendoHora) {
+        DatePickerDialog(
+            onDismissRequest = alCerrar,
+            confirmButton = {
+                TextButton(
+                    onClick = { eligiendoHora = true },
+                    enabled = estadoFecha.selectedDateMillis != null
+                ) { Text("Siguiente", color = Teal) }
+            },
+            dismissButton = {
+                TextButton(onClick = alCerrar) { Text("Cancelar", color = GrisTexto) }
+            }
+        ) {
+            DatePicker(state = estadoFecha)
+        }
+    } else {
+        AlertDialog(
+            onDismissRequest = alCerrar,
+            title = { Text("¿A qué hora lo viste?", fontSize = 16.sp) },
+            text = { TimePicker(state = estadoHora) },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Día elegido (UTC) + hora elegida (local) → momento en hora local
+                    val dia = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                        timeInMillis = estadoFecha.selectedDateMillis ?: fechaActual
+                    }
+                    val elegido = Calendar.getInstance().apply {
+                        clear()
+                        set(
+                            dia.get(Calendar.YEAR), dia.get(Calendar.MONTH), dia.get(Calendar.DAY_OF_MONTH),
+                            estadoHora.hour, estadoHora.minute
+                        )
+                    }
+                    alElegir(elegido.timeInMillis)
+                }) { Text("Aceptar", color = Teal) }
+            },
+            dismissButton = {
+                TextButton(onClick = { eligiendoHora = false }) { Text("Atrás", color = GrisTexto) }
+            }
+        )
     }
 }

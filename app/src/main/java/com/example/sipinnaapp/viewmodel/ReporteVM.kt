@@ -209,6 +209,14 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         _estado.value = _estado.value.copy(descripcion = valor)
     }
 
+    fun cambiarFechaAvistamiento(millis: Long) {
+        if (millis > System.currentTimeMillis()) {
+            _estado.value = _estado.value.copy(error = "La fecha y hora no pueden ser posteriores a este momento.")
+            return
+        }
+        _estado.value = sinProgresoDeEnvio(_estado.value).copy(fechaAvistamiento = millis)
+    }
+
     // --- Navegación entre pasos ---
 
     fun siguientePaso() {
@@ -518,7 +526,8 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             children_quantity = 1,
             children_age = e.edadNino,
             work_type = e.tiposTrabajo.joinToString(", "),
-            sighting_time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault()).format(Date())
+            sighting_time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+                .format(Date(e.fechaAvistamiento ?: System.currentTimeMillis()))
         )
     }
 
