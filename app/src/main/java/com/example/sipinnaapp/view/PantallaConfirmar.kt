@@ -90,7 +90,7 @@ fun PantallaConfirmar(
 
             // Ubicación
             TarjetaResumen {
-                TituloSeccion(Icons.Default.Place, "Ubicación")
+                TituloSeccion(Icons.Default.Place, "Ubicación", alEditar = { if (!estado.cargando) vm.editarDesdeConfirmar(1) })
                 Espacio(10.dp)
                 Box(
                     contentAlignment = Alignment.Center,
@@ -114,7 +114,7 @@ fun PantallaConfirmar(
 
             // Fotos
             TarjetaResumen {
-                TituloSeccion(Icons.Default.AccountBox, "Fotos del lugar")
+                TituloSeccion(Icons.Default.AccountBox, "Fotos del lugar", alEditar = { if (!estado.cargando) vm.editarDesdeConfirmar(2) })
                 Espacio(10.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     estado.fotos.forEach { uri ->
@@ -147,7 +147,7 @@ fun PantallaConfirmar(
 
             // Descripción
             TarjetaResumen {
-                TituloSeccion(Icons.Default.Edit, "Descripción")
+                TituloSeccion(Icons.Default.Edit, "Descripción", alEditar = { if (!estado.cargando) vm.editarDesdeConfirmar(4) })
                 Espacio(8.dp)
                 Text(estado.descripcion, fontSize = 12.sp, color = Color.Black)
             }
@@ -156,7 +156,7 @@ fun PantallaConfirmar(
 
             // Información del niño
             TarjetaResumen {
-                TituloSeccion(Icons.Default.Person, "Información del Niño/Niña/Adolescente")
+                TituloSeccion(Icons.Default.Person, "Información del Niño/Niña/Adolescente", alEditar = { if (!estado.cargando) vm.editarDesdeConfirmar(3) })
                 Espacio(10.dp)
                 EtiquetaGris("Edad aproximada")
                 Espacio(4.dp)
@@ -226,8 +226,11 @@ fun TarjetaResumen(contenido: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun TituloSeccion(icono: ImageVector, texto: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = null) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = if (alEditar != null) Modifier.fillMaxWidth() else Modifier
+    ) {
         Icon(icono, contentDescription = null, tint = Teal, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
         Text(
@@ -235,8 +238,19 @@ fun TituloSeccion(icono: ImageVector, texto: String) {
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
-            letterSpacing = 1.sp
+            letterSpacing = 1.sp,
+            modifier = if (alEditar != null) Modifier.weight(1f) else Modifier
         )
+        // Solo en la Confirmación: lleva al paso de esta sección
+        if (alEditar != null) {
+            TextButton(
+                onClick = alEditar,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                modifier = Modifier.height(28.dp)
+            ) {
+                Text("Editar", fontSize = 11.sp, color = Teal, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }
 

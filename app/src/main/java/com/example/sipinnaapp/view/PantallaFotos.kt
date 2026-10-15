@@ -88,7 +88,7 @@ fun PantallaFotos(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        BotonPrincipal(texto = "Siguiente", alPresionar = { vm.siguientePaso() })
+        BotonPrincipal(texto = if (estado.editandoDesdeConfirmar) "Guardar cambios" else "Siguiente", alPresionar = { vm.siguientePaso() })
 
         Espacio(24.dp)
     }

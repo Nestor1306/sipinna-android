@@ -321,7 +321,7 @@ fun PantallaLocacion(
         Espacio(20.dp)
 
         BotonPrincipal(
-            texto = "Confirmar",
+            texto = if (estado.editandoDesdeConfirmar) "Guardar cambios" else "Confirmar",
             alPresionar = {
                 vm.siguientePaso()
             },

@@ -110,7 +110,7 @@ fun PantallaInfoNino(
 
         Espacio(12.dp)
         BotonPrincipal(
-            texto = "Siguiente",
+            texto = if (estado.editandoDesdeConfirmar) "Guardar cambios" else "Siguiente",
             alPresionar = { vm.siguientePaso() },
             habilitado = ReporteVM.errorDelPaso(estado).isEmpty()
         )

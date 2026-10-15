@@ -24,6 +24,7 @@ data class EstadoReporte(
 
     // Control de pantalla
     val pasoActual: Int = 1,        // 1 = locación ... 5 = confirmar
+    val editandoDesdeConfirmar: Boolean = false, // se entró a un paso con "Editar" desde la Confirmación
     val cargando: Boolean = false,
     val error: String = "",
     val folioGenerado: String = "",   // si no está vacío, el reporte ya se envió

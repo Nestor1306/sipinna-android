@@ -222,21 +222,46 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             return
         }
 
+        // Si vino a corregir algo desde la Confirmación, regresa directo a ella
+        if (e.editandoDesdeConfirmar) {
+            _estado.value = e.copy(pasoActual = TOTAL_PASOS, editandoDesdeConfirmar = false)
+            return
+        }
+
         if (e.pasoActual < TOTAL_PASOS) {
             _estado.value = e.copy(pasoActual = e.pasoActual + 1)
         }
     }
 
-
     fun pasoAnterior() {
-        val actual = _estado.value.pasoActual
-        if (actual > 1) {
-            _estado.value = sinProgresoDeEnvio(_estado.value).copy(pasoActual = actual - 1)
+        val e = _estado.value
+        // La flecha también regresa a la Confirmación si se estaba editando un paso
+        if (e.editandoDesdeConfirmar && errorDelPaso(e).isEmpty()) {
+            _estado.value = e.copy(pasoActual = TOTAL_PASOS, editandoDesdeConfirmar = false)
+            return
+        }
+        if (e.pasoActual > 1) {
+            _estado.value = sinProgresoDeEnvio(e).copy(
+                pasoActual = e.pasoActual - 1,
+                editandoDesdeConfirmar = false
+            )
         }
     }
 
+    // "Editar reporte" (abajo en la Confirmación): recorre todo desde el paso que se pida
     fun irAPaso(paso: Int) {
-        _estado.value = sinProgresoDeEnvio(_estado.value).copy(pasoActual = paso.coerceIn(1, TOTAL_PASOS))
+        _estado.value = sinProgresoDeEnvio(_estado.value).copy(
+            pasoActual = paso.coerceIn(1, TOTAL_PASOS),
+            editandoDesdeConfirmar = false
+        )
+    }
+
+    // Botón "Editar" de una sección de la Confirmación: va a ese paso y al terminar regresa
+    fun editarDesdeConfirmar(paso: Int) {
+        _estado.value = sinProgresoDeEnvio(_estado.value).copy(
+            pasoActual = paso.coerceIn(1, TOTAL_PASOS - 1),
+            editandoDesdeConfirmar = true
+        )
     }
 
     // Si el usuario regresa a editar después de un envío que falló a la mitad, el borrador

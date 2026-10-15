@@ -77,7 +77,7 @@ fun PantallaDescripcion(
         Espacio(14.dp)
 
         BotonPrincipal(
-            texto = "Siguiente",
+            texto = if (estado.editandoDesdeConfirmar) "Guardar cambios" else "Siguiente",
             alPresionar = { vm.siguientePaso() },
             habilitado = suficiente
         )
