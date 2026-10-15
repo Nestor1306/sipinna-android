@@ -159,4 +159,10 @@ class LoginVM(
         // Borra la sesión guardada
         sessionManager.borrarSesion()
     }
+
+    // El servidor dijo que la sesión ya no sirve: se borra y se avisa en el Login
+    fun sesionExpirada() {
+        cerrarSesion()
+        _estado.value = _estado.value.copy(error = "Tu sesión expiró. Vuelve a iniciar sesión.")
+    }
 }

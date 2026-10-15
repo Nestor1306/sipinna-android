@@ -131,6 +131,15 @@ fun AppNavegacion(
         pantallaActual = if (pantallaActual == "registro") "login" else "home"
     }
 
+    // Si el servidor rechazó la sesión (caducó), se cierra y se regresa al Login
+    LaunchedEffect(estadoReporte.sesionVencida) {
+        if (estadoReporte.sesionVencida) {
+            loginVM.sesionExpirada()
+            reporteVM.limpiarTodo()   // también reinicia sesionVencida
+            pantallaActual = "login"
+        }
+    }
+
     // Crossfade: la pantalla anterior se desvanece mientras aparece la nueva,
     // en lugar de cambiar de golpe. Ojo: adentro se usa "pantalla", no "pantallaActual".
     Crossfade(

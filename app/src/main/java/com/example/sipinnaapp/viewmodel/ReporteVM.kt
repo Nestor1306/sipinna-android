@@ -677,6 +677,9 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                         historialSinConexion = false,
                         historial = historial
                     )
+                } else if (respuesta.code() == 401) {
+                    // La sesión caducó: MainActivity cierra la sesión y manda al Login
+                    _estado.value = _estado.value.copy(cargandoHistorial = false, sesionVencida = true)
                 } else {
                     _estado.value = _estado.value.copy(
                         cargandoHistorial = false,
@@ -719,6 +722,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             val app = getApplication<Application>()
             try {
                 val respuesta = RetrofitClient.api.detalleReporte(cookieDeSesion(token), folio)
+                if (respuesta.code() == 401) {
+                    _estado.value = _estado.value.copy(cargandoDetalle = false, sesionVencida = true)
+                    return@launch
+                }
                 val detalle = respuesta.body()?.report
 
                 if (respuesta.isSuccessful && detalle != null) {

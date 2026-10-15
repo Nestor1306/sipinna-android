@@ -50,6 +50,7 @@ data class EstadoReporte(
     val historial: List<ReporteResumen> = emptyList(),
     val cargandoHistorial: Boolean = false,
     val errorHistorial: String = "",
+    val sesionVencida: Boolean = false,         // el servidor respondió 401: hay que volver a iniciar sesión
     val historialSinConexion: Boolean = false,  // el historial que se ve es la copia guardada (no hay internet)
     val sinInternet: Boolean = false,           // el teléfono no tiene red en este momento
     // Reportes guardados en el teléfono que aún no se envían (ver ReportesPendientes)
