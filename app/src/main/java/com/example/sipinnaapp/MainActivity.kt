@@ -40,6 +40,11 @@ import androidx.activity.compose.BackHandler
 import com.example.sipinnaapp.view.PantallaRecuperar
 import com.example.sipinnaapp.viewmodel.RecuperarVM
 import com.example.sipinnaapp.view.PantallaCreditos
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.sipinnaapp.worker.RevisarEstadosWorker
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -60,6 +65,9 @@ class MainActivity : ComponentActivity() {
 
         // Si quedaron reportes guardados sin internet, se programa su envío
         EnvioPendientesWorker.programar(applicationContext)
+
+        // Revisa cada ~15 min si algún reporte cambió de estado
+        RevisarEstadosWorker.programar(applicationContext)
 
         setContent {
             SipinnaAppTheme {
@@ -153,6 +161,17 @@ fun AppNavegacion(
             loginVM.sesionExpirada()
             reporteVM.limpiarTodo()   // también reinicia sesionVencida
             pantallaActual = "login"
+        }
+    }
+
+    // Permiso de notificaciones (Android 13+): se pide al entrar con una cuenta.
+    // Si ya lo dio, no aparece nada.
+    val pedirPermisoNotificaciones = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+    LaunchedEffect(estadoLogin.token) {
+        if (estadoLogin.token.isNotBlank() && Build.VERSION.SDK_INT >= 33) {
+            pedirPermisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 

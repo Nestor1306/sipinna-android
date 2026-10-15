@@ -45,6 +45,7 @@ import com.example.sipinnaapp.data.LugarSugerido
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.example.sipinnaapp.view.estadoPublico
+import com.example.sipinnaapp.data.EstadosConocidos
 
 // Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
 class ReporteVM(application: Application) : AndroidViewModel(application) {
@@ -671,7 +672,11 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                         .sortedByDescending { consecutivoDeFolio(it.folio) }
 
                     // Copia en el teléfono para poder verlo sin internet
-                    withContext(Dispatchers.IO) { runCatching { CacheHistorial.guardar(app, historial) } }
+                    withContext(Dispatchers.IO) {
+                        runCatching { CacheHistorial.guardar(app, historial) }
+                        // Lo que el usuario ya vio en la app: no se le avisa con notificación
+                        runCatching { EstadosConocidos.guardar(app, historial) }
+                    }
 
                     _estado.value = _estado.value.copy(
                         cargandoHistorial = false,
@@ -782,6 +787,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     fun limpiarTodo() {
         ultimoToken = ""
         CacheHistorial.borrar(getApplication())
+        EstadosConocidos.borrar(getApplication())
         CacheDetalles.borrarTodo(getApplication())
         _estado.value = EstadoReporte(
             sinInternet = _estado.value.sinInternet,
