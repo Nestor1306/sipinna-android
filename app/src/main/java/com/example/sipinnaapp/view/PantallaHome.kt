@@ -193,6 +193,9 @@ fun PantallaHome(
                 Espacio(12.dp)
             }
 
+            AvisoEmergencia()
+            Espacio(12.dp)
+
             // Tarjetas de reportes
             if (cargando && reportes.isEmpty()) {
                 Box(

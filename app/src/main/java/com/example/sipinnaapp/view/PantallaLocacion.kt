@@ -219,7 +219,11 @@ fun PantallaLocacion(
             alRegresar = alRegresar
         )
 
-        Espacio(28.dp)
+        Espacio(16.dp)
+
+        AvisoEmergencia()
+
+        Espacio(16.dp)
 
         CampoBusqueda(
             valor = estado.direccion,

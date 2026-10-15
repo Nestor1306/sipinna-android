@@ -22,6 +22,10 @@ import androidx.compose.ui.unit.sp
 import com.example.sipinnaapp.ui.theme.*
 import com.example.sipinnaapp.viewmodel.ReporteVM
 import androidx.compose.ui.draw.alpha
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.ui.platform.LocalContext
 
 // --- Componentes reutilizables del flujo de reporte (según Figma) ---
 
@@ -212,5 +216,44 @@ fun BotonCircular(
             .clickable(onClick = alPresionar)
     ) {
         contenido()
+    }
+}
+
+// Aviso para emergencias: un reporte en la app no es inmediato.
+// "Llamar" abre el marcador con el 911 escrito; la persona decide si llama.
+@Composable
+fun AvisoEmergencia(modifier: Modifier = Modifier) {
+    val contexto = LocalContext.current
+    val abrirMarcador = {
+        contexto.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:911")))
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(RojoNoApto.copy(alpha = 0.10f))
+            .clickable { abrirMarcador() }
+            .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
+    ) {
+        Text(
+            text = "¿Un niño está en peligro inmediato? Llama al 911.",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = RojoNoApto,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(8.dp))
+        Button(
+            onClick = abrirMarcador,
+            colors = ButtonDefaults.buttonColors(containerColor = RojoNoApto, contentColor = Color.White),
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+            modifier = Modifier.height(34.dp)
+        ) {
+            Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Llamar", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
