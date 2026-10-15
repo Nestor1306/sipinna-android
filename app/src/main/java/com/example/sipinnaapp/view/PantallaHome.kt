@@ -48,6 +48,7 @@ fun PantallaHome(
     esAnonimo: Boolean,
     alHacerReporte: () -> Unit,
     alIrAPerfil: () -> Unit,
+    alVerCreditos: () -> Unit,
     alAbrirReporte: (ReporteResumen) -> Unit,
     alRefrescar: () -> Unit,
     avisoSinConexion: String,       // "" = hay conexión; si no, se muestra arriba de las tarjetas
@@ -93,10 +94,14 @@ fun PantallaHome(
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
             ) {
+                // El logo abre "Acerca de la app" (créditos)
                 Image(
                     painter = painterResource(id = R.drawable.sipinna_logo),
-                    contentDescription = "Logo SIPINNA",
-                    modifier = Modifier.height(38.dp)
+                    contentDescription = "Acerca de la app",
+                    modifier = Modifier
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = alVerCreditos)
                 )
                 Icon(
                     imageVector = Icons.Default.AccountCircle,

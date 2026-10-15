@@ -22,6 +22,7 @@ fun PantallaLogin(
     alIrARegistro: () -> Unit, // función para navegar a registro
     alEntrarAnonimo:() -> Unit,
     alOlvideContrasena: () -> Unit,
+    alVerCreditos: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
@@ -104,6 +105,12 @@ fun PantallaLogin(
                 color = GrisTexto,
                 textDecoration = TextDecoration.Underline
             )
+        }
+
+        Spacer(Modifier.weight(1f))   // empuja el enlace hasta abajo
+
+        TextButton(onClick = alVerCreditos) {
+            Text("Acerca de la app", fontSize = 13.sp, color = GrisTexto)
         }
     }
 }

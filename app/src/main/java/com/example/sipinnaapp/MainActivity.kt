@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import androidx.activity.compose.BackHandler
 import com.example.sipinnaapp.view.PantallaRecuperar
 import com.example.sipinnaapp.viewmodel.RecuperarVM
+import com.example.sipinnaapp.view.PantallaCreditos
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -100,6 +101,9 @@ fun AppNavegacion(
     // Folio del reporte que se tocó en el Home (para la pantalla "detalle")
     var folioAbierto by remember { mutableStateOf("") }
 
+    // A dónde regresar al salir de "Acerca de" (se abre desde el Login o desde el Perfil)
+    var origenCreditos by remember { mutableStateOf("login") }
+
     // Cuando el login es exitoso, entra directo al Home
     LaunchedEffect(
         estadoLogin.loginExitoso,
@@ -133,8 +137,14 @@ fun AppNavegacion(
     // Botón/gesto "atrás" de Android: regresa a la pantalla anterior en lugar de cerrar la app.
     // En el Home y el Login no se activa, así que ahí sí cierra la app (lo normal en Android).
     // El reporte maneja su propio "atrás" en FlujoReporte; el aviso anónimo también tiene el suyo.
-    BackHandler(enabled = pantallaActual in listOf("detalle", "perfil", "registro", "recuperar")) {
-        pantallaActual = if (pantallaActual == "registro" || pantallaActual == "recuperar") "login" else "home"
+    BackHandler(
+        enabled = pantallaActual in listOf("detalle", "perfil", "registro", "recuperar", "creditos")
+    ) {
+        pantallaActual = when (pantallaActual) {
+            "registro", "recuperar" -> "login"
+            "creditos" -> origenCreditos
+            else -> "home"
+        }
     }
 
     // Si el servidor rechazó la sesión (caducó), se cierra y se regresa al Login
@@ -163,6 +173,10 @@ fun AppNavegacion(
                     recuperarVM.reiniciar(estadoLogin.email.trim().takeIf { it.contains("@") } ?: "")
                     pantallaActual = "recuperar"
                 },
+                alVerCreditos = {
+                    origenCreditos = "login"
+                    pantallaActual = "creditos"
+                },
                 modifier = modifier
             )
             "avisoAnonimo" -> PantallaAvisoAnonimo(
@@ -183,6 +197,10 @@ fun AppNavegacion(
             "recuperar" -> PantallaRecuperar(
                 vm = recuperarVM,
                 alRegresar = { pantallaActual = "login" },
+                modifier = modifier
+            )
+            "creditos" -> PantallaCreditos(
+                alRegresar = { pantallaActual = origenCreditos },
                 modifier = modifier
             )
             "home" -> PantallaHome(
@@ -207,6 +225,10 @@ fun AppNavegacion(
                     pantallaActual = "reporte"
                 },
                 alIrAPerfil = { pantallaActual = "perfil" },
+                alVerCreditos = {
+                    origenCreditos = "home"
+                    pantallaActual = "creditos"
+                },
                 alAbrirReporte = { reporte ->
                     val idLocal = reporte.idLocal
                     if (idLocal != null) {
