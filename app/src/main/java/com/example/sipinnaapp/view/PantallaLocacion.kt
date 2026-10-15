@@ -34,6 +34,12 @@ import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportS
 import com.mapbox.maps.extension.compose.annotation.Marker
 
 import java.util.Locale
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 
 @OptIn(MapboxExperimental::class)
 @Composable
@@ -45,6 +51,7 @@ fun PantallaLocacion(
 
     val estado by vm.estado.collectAsState()
     val contexto = LocalContext.current
+    val enfoque = LocalFocusManager.current   // para esconder el teclado al elegir un lugar
 
     // Cámara inicial del mapa.
     // Mientras todavía no tenemos GPS, muestra Ciudad de México.
@@ -218,8 +225,9 @@ fun PantallaLocacion(
             valor = estado.direccion,
             alCambiar = {
                 vm.actualizarDireccion(it)
+                vm.buscarLugares(it)
             },
-            placeholder = "Av. Lago de Guadalupe"
+            placeholder = "Busca una calle, colonia o lugar"
         )
 
         Espacio(20.dp)
@@ -245,6 +253,8 @@ fun PantallaLocacion(
 
                     val longitudNueva =
                         punto.longitude()
+
+                    vm.cerrarSugerencias()
 
                     vm.actualizarCoordenadas(
                         latitudNueva,
@@ -313,6 +323,61 @@ fun PantallaLocacion(
                                 "Usar mi ubicación",
                             tint = Teal
                         )
+                    }
+                }
+            }
+            // Lista de lugares sugeridos, encima del mapa
+            if (estado.sugerencias.isNotEmpty()) {
+                Card(
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Column {
+                        estado.sugerencias.forEachIndexed { i, lugar ->
+                            if (i > 0) HorizontalDivider(color = SuperficieSecundaria)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        enfoque.clearFocus()
+                                        vm.elegirLugar(lugar)
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Place,
+                                    contentDescription = null,
+                                    tint = Teal,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = lugar.nombre,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.Black,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    if (lugar.direccion.isNotBlank() && lugar.direccion != lugar.nombre) {
+                                        Text(
+                                            text = lugar.direccion,
+                                            fontSize = 11.sp,
+                                            color = GrisTexto,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

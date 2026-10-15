@@ -2,6 +2,7 @@ package com.example.sipinnaapp.viewmodel
 
 import com.example.sipinnaapp.model.ReporteResumen
 import com.example.sipinnaapp.model.ReporteDetalle
+import com.example.sipinnaapp.data.LugarSugerido
 
 // Un solo estado para todo el flujo del reporte (5 pasos)
 data class EstadoReporte(
@@ -10,6 +11,7 @@ data class EstadoReporte(
     val longitud: Double = 0.0,
     val direccion: String = "",
     val buscandoUbicacion: Boolean = false,
+    val sugerencias: List<LugarSugerido> = emptyList(),   // resultados del buscador de lugares
 
     // Paso 2: Fotos (guardamos las Uri como texto, máximo 2)
     val fotos: List<String> = emptyList(),

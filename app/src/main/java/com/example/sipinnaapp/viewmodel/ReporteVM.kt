@@ -39,6 +39,11 @@ import com.example.sipinnaapp.model.ReporteResumen
 import com.example.sipinnaapp.worker.EnvioPendientesWorker
 import com.example.sipinnaapp.model.ReporteDetalle
 import com.example.sipinnaapp.data.CacheDetalles
+import com.example.sipinnaapp.R
+import com.example.sipinnaapp.data.BuscadorLugares
+import com.example.sipinnaapp.data.LugarSugerido
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 // Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
 class ReporteVM(application: Application) : AndroidViewModel(application) {
@@ -167,6 +172,51 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     fun actualizarBuscandoUbicacion(valor: Boolean) {
         _estado.value = _estado.value.copy(buscandoUbicacion = valor)
+    }
+    // --- Buscador de lugares (paso 1) ---
+
+    private var busquedaLugar: Job? = null
+
+    // Se llama cada vez que el usuario escribe en el campo de dirección
+    fun buscarLugares(texto: String) {
+        busquedaLugar?.cancel()
+        if (texto.trim().length < 3) {
+            _estado.value = _estado.value.copy(sugerencias = emptyList())
+            return
+        }
+        busquedaLugar = viewModelScope.launch {
+            delay(400)   // espera a que deje de escribir para no buscar en cada letra
+            val e = _estado.value
+            val token = getApplication<Application>().getString(R.string.mapbox_access_token).trim()
+            val resultados = try {
+                withContext(Dispatchers.IO) {
+                    BuscadorLugares.buscar(
+                        texto.trim(), token,
+                        e.latitud.takeIf { it != 0.0 }, e.longitud.takeIf { it != 0.0 }
+                    )
+                }
+            } catch (ex: Exception) {
+                Log.w("SIPINNA", "No se pudo buscar el lugar", ex)
+                emptyList()   // sin internet: simplemente no salen sugerencias
+            }
+            _estado.value = _estado.value.copy(sugerencias = resultados)
+        }
+    }
+
+    // Tocó una sugerencia: mueve el pin ahí y llena la dirección
+    fun elegirLugar(lugar: LugarSugerido) {
+        busquedaLugar?.cancel()
+        _estado.value = _estado.value.copy(
+            latitud = lugar.latitud,
+            longitud = lugar.longitud,
+            direccion = lugar.direccion.ifBlank { lugar.nombre },
+            sugerencias = emptyList()
+        )
+    }
+
+    fun cerrarSugerencias() {
+        busquedaLugar?.cancel()
+        _estado.value = _estado.value.copy(sugerencias = emptyList())
     }
 
     // --- Paso 2: Fotos ---
