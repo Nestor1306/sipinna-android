@@ -21,6 +21,7 @@ fun PantallaLogin(
     vm: LoginVM,
     alIrARegistro: () -> Unit, // función para navegar a registro
     alEntrarAnonimo:() -> Unit,
+    alOlvideContrasena: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
@@ -69,7 +70,14 @@ fun PantallaLogin(
             alCambiar = { vm.actualizarPassword(it) },
             modifier = Modifier.fillMaxWidth()
         )
-        Espacio(32.dp)
+        // Link para recuperar la contraseña (a la derecha, debajo del campo)
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = alOlvideContrasena) {
+                Text("¿Olvidaste tu contraseña?", fontSize = 13.sp)
+            }
+        }
+        Espacio(16.dp)
 
         if (estado.cargando) {
             CircularProgressIndicator()

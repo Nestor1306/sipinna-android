@@ -20,6 +20,11 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import com.example.sipinnaapp.model.RespuestaDetalle
+import com.example.sipinnaapp.model.CambioContrasena
+import com.example.sipinnaapp.model.RespuestaMensaje
+import com.example.sipinnaapp.model.SolicitudCodigo
+import com.example.sipinnaapp.model.ConfirmacionEliminar
+import retrofit2.http.HTTP
 
 // Define los endpoints del backend Go (rama main del equipo)
 // Cada función aquí = un endpoint de la API.
@@ -37,6 +42,30 @@ interface ApiService {
     suspend fun login(
         @Body credenciales: LoginRequest
     ): Response<LoginResponse>
+
+
+    // ---- Recuperar contraseña (solo con correo) ----
+
+    // Manda un código de 6 dígitos al correo (vence en 10 min, uno por minuto)
+    @POST("auth/password/forgot")
+    suspend fun pedirCodigo(
+        @Body datos: SolicitudCodigo
+    ): Response<RespuestaMensaje>
+
+    // Cambia la contraseña con el código. No inicia sesión.
+    @POST("auth/password/reset")
+    suspend fun cambiarContrasena(
+        @Body datos: CambioContrasena
+    ): Response<RespuestaMensaje>
+
+
+    // DELETE /account → elimina la cuenta de quien tiene la sesión.
+    // Retrofit no deja mandar cuerpo con @DELETE, por eso se usa @HTTP.
+    @HTTP(method = "DELETE", path = "account", hasBody = true)
+    suspend fun eliminarCuenta(
+        @Header("Cookie") sesion: String,
+        @Body confirmacion: ConfirmacionEliminar
+    ): Response<Any>
 
     // ---- Envío de un reporte: 4 pasos (ver ReporteVM.enviar) ----
 

@@ -16,3 +16,20 @@ data class LoginResponse(
     val user_type: String?,   // "citizen", "administrador" o "alimentador"
     val zone_name: String?
 )
+
+// POST /auth/password/forgot → manda un código de 6 dígitos al correo
+data class SolicitudCodigo(val email: String)
+
+// POST /auth/password/reset → cambia la contraseña con ese código
+data class CambioContrasena(
+    val email: String,
+    val code: String,
+    val new_password: String
+)
+
+// Respuesta de los dos: {"message": "..."}
+data class RespuestaMensaje(val message: String?)
+
+
+// DELETE /account → el backend pide {"confirmation": "ELIMINAR"}
+data class ConfirmacionEliminar(val confirmation: String = "ELIMINAR")

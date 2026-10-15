@@ -37,6 +37,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import androidx.activity.compose.BackHandler
+import com.example.sipinnaapp.view.PantallaRecuperar
+import com.example.sipinnaapp.viewmodel.RecuperarVM
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -48,6 +50,8 @@ class MainActivity : ComponentActivity() {
     private val registroVM: RegistroVM by viewModels()
     private val loginVM: LoginVM by viewModels()
     private val reporteVM: ReporteVM by viewModels()
+
+    private val recuperarVM: RecuperarVM by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +67,7 @@ class MainActivity : ComponentActivity() {
                         registroVM = registroVM,
                         loginVM = loginVM,
                         reporteVM = reporteVM,
+                        recuperarVM = recuperarVM,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -78,6 +83,7 @@ fun AppNavegacion(
     registroVM: RegistroVM,
     loginVM: LoginVM,
     reporteVM: ReporteVM,
+    recuperarVM: RecuperarVM,
     modifier: Modifier = Modifier
 ) {
     val estadoLogin by loginVM.estado.collectAsState()
@@ -127,8 +133,8 @@ fun AppNavegacion(
     // Botón/gesto "atrás" de Android: regresa a la pantalla anterior en lugar de cerrar la app.
     // En el Home y el Login no se activa, así que ahí sí cierra la app (lo normal en Android).
     // El reporte maneja su propio "atrás" en FlujoReporte; el aviso anónimo también tiene el suyo.
-    BackHandler(enabled = pantallaActual in listOf("detalle", "perfil", "registro")) {
-        pantallaActual = if (pantallaActual == "registro") "login" else "home"
+    BackHandler(enabled = pantallaActual in listOf("detalle", "perfil", "registro", "recuperar")) {
+        pantallaActual = if (pantallaActual == "registro" || pantallaActual == "recuperar") "login" else "home"
     }
 
     // Si el servidor rechazó la sesión (caducó), se cierra y se regresa al Login
@@ -152,6 +158,11 @@ fun AppNavegacion(
                 vm = loginVM,
                 alIrARegistro = { pantallaActual = "registro" },
                 alEntrarAnonimo = { pantallaActual = "avisoAnonimo" },
+                alOlvideContrasena = {
+                    // Si ya había escrito su correo en el Login, se pasa para no escribirlo otra vez
+                    recuperarVM.reiniciar(estadoLogin.email.trim().takeIf { it.contains("@") } ?: "")
+                    pantallaActual = "recuperar"
+                },
                 modifier = modifier
             )
             "avisoAnonimo" -> PantallaAvisoAnonimo(
@@ -167,6 +178,11 @@ fun AppNavegacion(
             "registro" -> PantallaRegistro(
                 vm = registroVM,
                 alIrALogin = { pantallaActual = "login" },
+                modifier = modifier
+            )
+            "recuperar" -> PantallaRecuperar(
+                vm = recuperarVM,
+                alRegresar = { pantallaActual = "login" },
                 modifier = modifier
             )
             "home" -> PantallaHome(
