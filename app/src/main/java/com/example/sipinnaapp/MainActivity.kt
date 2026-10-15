@@ -246,6 +246,15 @@ fun AppNavegacion(
                     reporteVM.limpiarTodo()
                     pantallaActual = "login"
                 },
+                alEliminarCuenta = if (estadoLogin.esAnonimo) null else { alFallar ->
+                    loginVM.eliminarCuenta(
+                        alTerminar = {
+                            reporteVM.limpiarTodo()
+                            pantallaActual = "login"
+                        },
+                        alFallar = alFallar
+                    )
+                },
                 modifier = modifier
             )
             "reporte" -> FlujoReporte(

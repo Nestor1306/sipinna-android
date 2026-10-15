@@ -12,6 +12,8 @@ import com.example.sipinnaapp.network.sacarTokenDeCookie
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.example.sipinnaapp.model.ConfirmacionEliminar
+import com.example.sipinnaapp.network.cookieDeSesion
 
 class LoginVM(
     application: Application
@@ -164,5 +166,24 @@ class LoginVM(
     fun sesionExpirada() {
         cerrarSesion()
         _estado.value = _estado.value.copy(error = "Tu sesión expiró. Vuelve a iniciar sesión.")
+    }
+
+    // Elimina la cuenta en el servidor y, si sale bien, cierra la sesión
+    fun eliminarCuenta(alTerminar: () -> Unit, alFallar: (String) -> Unit) {
+        val token = _estado.value.token
+        viewModelScope.launch {
+            try {
+                val respuesta = RetrofitClient.api.eliminarCuenta(cookieDeSesion(token), ConfirmacionEliminar())
+                if (respuesta.isSuccessful) {
+                    cerrarSesion()
+                    _estado.value = _estado.value.copy(error = "Tu cuenta se eliminó.")
+                    alTerminar()
+                } else {
+                    alFallar(mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string()))
+                }
+            } catch (e: Exception) {
+                alFallar(mensajeDeExcepcion(e))
+            }
+        }
     }
 }
