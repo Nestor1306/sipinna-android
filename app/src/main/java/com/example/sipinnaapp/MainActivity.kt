@@ -36,6 +36,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
+import androidx.activity.compose.BackHandler
+
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
 // Cada cuánto se vuelve a pedir el historial mientras el Home está abierto (milisegundos)
@@ -121,6 +123,12 @@ fun AppNavegacion(
                 delay(INTERVALO_ACTUALIZACION)
             }
         }
+    }
+    // Botón/gesto "atrás" de Android: regresa a la pantalla anterior en lugar de cerrar la app.
+    // En el Home y el Login no se activa, así que ahí sí cierra la app (lo normal en Android).
+    // El reporte maneja su propio "atrás" en FlujoReporte; el aviso anónimo también tiene el suyo.
+    BackHandler(enabled = pantallaActual in listOf("detalle", "perfil", "registro")) {
+        pantallaActual = if (pantallaActual == "registro") "login" else "home"
     }
 
     // Crossfade: la pantalla anterior se desvanece mientras aparece la nueva,
@@ -234,6 +242,17 @@ fun FlujoReporte(
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
+
+    // "Atrás" dentro del reporte: paso anterior (o a la Confirmación si se estaba editando).
+    // En el paso 1 o en "Reporte enviado" regresa al Home. Mientras se envía no hace nada.
+    BackHandler {
+        when {
+            estado.cargando -> Unit
+            estado.folioGenerado.isNotEmpty() -> alSalir()
+            estado.pasoActual > 1 || estado.editandoDesdeConfirmar -> vm.pasoAnterior()
+            else -> alSalir()
+        }
+    }
 
     if (estado.error.isNotEmpty()) {
         AlertDialog(
