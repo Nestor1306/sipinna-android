@@ -175,11 +175,17 @@ fun AppNavegacion(
                 },
                 alIrAPerfil = { pantallaActual = "perfil" },
                 alAbrirReporte = { reporte ->
-                    // Los pendientes aún no existen en el servidor: no tienen detalle que abrir
-                    if (reporte.folio.isNullOrBlank()) return@PantallaHome
-                    folioAbierto = reporte.folio
-                    reporteVM.cargarDetalle(estadoLogin.token, folioAbierto)
-                    pantallaActual = "detalle"
+                    val idLocal = reporte.idLocal
+                    if (idLocal != null) {
+                        // Guardado sin internet: se abre con los datos del teléfono
+                        folioAbierto = ""
+                        reporteVM.abrirPendiente(idLocal)
+                        pantallaActual = "detalle"
+                    } else if (!reporte.folio.isNullOrBlank()) {
+                        folioAbierto = reporte.folio
+                        reporteVM.cargarDetalle(estadoLogin.token, folioAbierto)
+                        pantallaActual = "detalle"
+                    }
                 },
                 alRefrescar = {
                     reporteVM.refrescarPendientes()
@@ -192,7 +198,10 @@ fun AppNavegacion(
                 cargando = estadoReporte.cargandoDetalle,
                 mensajeError = estadoReporte.errorDetalle,
                 alRegresar = { pantallaActual = "home" },
-                alReintentar = { reporteVM.cargarDetalle(estadoLogin.token, folioAbierto) },
+                alReintentar = {
+                    if (folioAbierto.isNotBlank()) reporteVM.cargarDetalle(estadoLogin.token, folioAbierto)
+                },
+                sinConexion = estadoReporte.detalleSinConexion,
                 modifier = modifier
             )
 

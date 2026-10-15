@@ -42,6 +42,7 @@ fun PantallaDetalleReporte(
     mensajeError: String,
     alRegresar: () -> Unit,
     alReintentar: () -> Unit,
+    sinConexion: Boolean = false,       // lo que se ve es una copia guardada
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -96,14 +97,14 @@ fun PantallaDetalleReporte(
                 }
             }
 
-            else -> ContenidoDetalle(detalle)
+            else -> ContenidoDetalle(detalle, sinConexion)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ContenidoDetalle(detalle: ReporteDetalle) {
+private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
     val info = infoDeEstado(detalle.last_state)
     val partes = separarDescripcion(detalle.description)
     val tokenMapbox = stringResource(R.string.mapbox_access_token)
@@ -122,6 +123,21 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
             .padding(horizontal = 18.dp)
     ) {
         Espacio(12.dp)
+
+        if (sinConexion) {
+            Text(
+                text = "Sin conexión: esta es la información guardada en el teléfono y puede no estar actualizada.",
+                fontSize = 12.sp,
+                color = GrisTexto,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(SuperficieSecundaria)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            )
+            Espacio(12.dp)
+        }
 
         // Estado actual
         TarjetaResumen {
@@ -153,7 +169,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
                     }
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    EtiquetaGris("Enviado")
+                    EtiquetaGris(if (detalle.last_state == "pendiente_envio") "Guardado" else "Enviado")
                     Text(fechaLegible(detalle.created_at), fontSize = 12.sp, color = GrisTexto)
                 }
             }
@@ -212,7 +228,9 @@ private fun ContenidoDetalle(detalle: ReporteDetalle) {
             Espacio(10.dp)
             if (enlacesFotos.isEmpty()) {
                 Text(
-                    text = "Sin fotos",
+                    text = if (sinConexion && detalle.last_state != "pendiente_envio")
+                        "Las fotos solo se pueden ver con conexión."
+                    else "Sin fotos",
                     fontSize = 12.sp,
                     color = GrisTexto
                 )

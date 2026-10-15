@@ -60,7 +60,8 @@ data class ReporteResumen(
     val report_state: String?,   // "DRAFT", "registrado", "en_revision", "canalizado"...
     val latitude: Double?,
     val longitude: Double?,
-    val description: String?
+    val description: String?,
+    val idLocal: String? = null  // solo los pendientes (guardados en el teléfono) lo tienen
 )
 
 // Lo que devuelve GET /report/{folio}: {"report": { ... }}

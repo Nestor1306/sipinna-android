@@ -7,4 +7,5 @@
     <exclude domain="file" path="pendientes/" />
     <exclude domain="file" path="historial.json" />
     <exclude domain="sharedpref" path="sesion.xml" />
+    <exclude domain="file" path="detalles/" />
 </full-backup-content>

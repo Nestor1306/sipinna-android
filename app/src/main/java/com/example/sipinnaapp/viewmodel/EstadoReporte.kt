@@ -53,6 +53,7 @@ data class EstadoReporte(
     // Detalle del reporte que se tocó en el Home (viene de GET /report/{folio})
     val detalle: ReporteDetalle? = null,
     val cargandoDetalle: Boolean = false,
-    val errorDetalle: String = ""
+    val errorDetalle: String = "",
+    val detalleSinConexion: Boolean = false    // el detalle que se ve es una copia guardada
 )
 

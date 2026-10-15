@@ -37,6 +37,8 @@ import androidx.work.WorkManager
 import com.example.sipinnaapp.data.ReportesPendientes
 import com.example.sipinnaapp.model.ReporteResumen
 import com.example.sipinnaapp.worker.EnvioPendientesWorker
+import com.example.sipinnaapp.model.ReporteDetalle
+import com.example.sipinnaapp.data.CacheDetalles
 
 // Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
 class ReporteVM(application: Application) : AndroidViewModel(application) {
@@ -424,13 +426,58 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                         report_state = "pendiente_envio",
                         latitude = p.peticion.latitude,
                         longitude = p.peticion.longitude,
-                        description = p.peticion.description
+                        description = p.peticion.description,
+                        idLocal = p.id
                     )
                 }
             )
         }
     }
+    // Abre el detalle de un reporte guardado sin internet, con lo que hay en el teléfono
+    fun abrirPendiente(idLocal: String) {
+        _estado.value = _estado.value.copy(detalle = null, cargandoDetalle = true, errorDetalle = "")
 
+        viewModelScope.launch {
+            val app = getApplication<Application>()
+            val pendiente = withContext(Dispatchers.IO) {
+                ReportesPendientes.listar(app).firstOrNull { it.id == idLocal }
+            }
+
+            if (pendiente == null) {
+                // Pudo haberse enviado justo ahora
+                _estado.value = _estado.value.copy(
+                    cargandoDetalle = false,
+                    errorDetalle = "Este reporte ya se envió. Regresa al inicio para verlo en tu historial."
+                )
+                return@launch
+            }
+
+            val p = pendiente.peticion
+            val guardadoEl = java.time.Instant.ofEpochMilli(pendiente.creadoEn)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toOffsetDateTime()
+                .toString()
+
+            _estado.value = _estado.value.copy(
+                cargandoDetalle = false,
+                detalle = ReporteDetalle(
+                    folio = null,                          // aún no tiene: lo asigna el servidor
+                    description = p.description,
+                    latitude = p.latitude,
+                    longitude = p.longitude,
+                    children_quantity = p.children_quantity,
+                    children_age = p.children_age,
+                    work_type = p.work_type,
+                    created_at = guardadoEl,
+                    sighting_time = p.sighting_time,
+                    zone_name = null,
+                    last_state = "pendiente_envio",
+                    state_changed_at = guardadoEl,
+                    images = pendiente.fotos.map { "file://$it" }   // fotos guardadas en el teléfono
+                )
+            )
+        }
+    }
 
     // Arma el JSON del paso 1. La dirección escrita y la condición no tienen columna en la
     // base, así que van al final de la descripción para no perderlas.
@@ -569,9 +616,12 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Pide a la base de datos el detalle de un reporte (al tocar su tarjeta en el Home)
+    // Pide a la base de datos el detalle de un reporte (al tocar su tarjeta en el Home).
+    // Sin internet, muestra la copia guardada (o al menos lo que ya se ve en la tarjeta).
     fun cargarDetalle(token: String, folio: String) {
-        _estado.value = _estado.value.copy(detalle = null, cargandoDetalle = true, errorDetalle = "")
+        _estado.value = _estado.value.copy(
+            detalle = null, cargandoDetalle = true, errorDetalle = "", detalleSinConexion = false
+        )
 
         if (token.isBlank()) {
             _estado.value = _estado.value.copy(
@@ -582,17 +632,30 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
+            val app = getApplication<Application>()
             try {
                 val respuesta = RetrofitClient.api.detalleReporte(cookieDeSesion(token), folio)
                 val detalle = respuesta.body()?.report
 
-                _estado.value = if (respuesta.isSuccessful && detalle != null) {
-                    _estado.value.copy(cargandoDetalle = false, detalle = detalle)
+                if (respuesta.isSuccessful && detalle != null) {
+                    // Copia para verlo después sin internet
+                    withContext(Dispatchers.IO) { runCatching { CacheDetalles.guardar(app, detalle) } }
+                    _estado.value = _estado.value.copy(cargandoDetalle = false, detalle = detalle)
                 } else {
-                    _estado.value.copy(
+                    _estado.value = _estado.value.copy(
                         cargandoDetalle = false,
                         errorDetalle = mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
                     )
+                }
+            } catch (ex: IOException) {
+                // Sin internet: copia guardada del detalle, o lo que ya se ve en la tarjeta
+                val copia = withContext(Dispatchers.IO) { CacheDetalles.leer(app, folio) }
+                    ?: detalleDesdeTarjeta(folio)
+
+                _estado.value = if (copia != null) {
+                    _estado.value.copy(cargandoDetalle = false, detalle = copia, detalleSinConexion = true)
+                } else {
+                    _estado.value.copy(cargandoDetalle = false, errorDetalle = mensajeDeExcepcion(ex))
                 }
             } catch (ex: Exception) {
                 _estado.value = _estado.value.copy(
@@ -603,10 +666,31 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Arma un detalle mínimo con los datos de la tarjeta del historial
+    private fun detalleDesdeTarjeta(folio: String): ReporteDetalle? {
+        val r = _estado.value.historial.firstOrNull { it.folio == folio } ?: return null
+        return ReporteDetalle(
+            folio = r.folio,
+            description = r.description,
+            latitude = r.latitude,
+            longitude = r.longitude,
+            children_quantity = null,
+            children_age = null,
+            work_type = null,
+            created_at = null,
+            sighting_time = null,
+            zone_name = null,
+            last_state = r.report_state,
+            state_changed_at = null,
+            images = emptyList()
+        )
+    }
+
     // Al cerrar sesión se borra todo, para que otro usuario no vea estos reportes
     fun limpiarTodo() {
         ultimoToken = ""
         CacheHistorial.borrar(getApplication())
+        CacheDetalles.borrarTodo(getApplication())
         _estado.value = EstadoReporte(
             sinInternet = _estado.value.sinInternet,
             pendientes = _estado.value.pendientes
