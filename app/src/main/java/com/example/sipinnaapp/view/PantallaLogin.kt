@@ -56,7 +56,7 @@ fun PantallaLogin(
         Espacio(40.dp)
 
         CampoTexto(
-            etiqueta = "Email",
+            etiqueta = "Correo o teléfono",
             valor = estado.email,
             alCambiar = { vm.actualizarEmail(it) },
             teclado = KeyboardType.Email,

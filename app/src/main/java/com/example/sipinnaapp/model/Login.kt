@@ -1,8 +1,10 @@
 package com.example.sipinnaapp.model
 
-// Lo que enviamos al servidor (POST /auth/login)
+// Lo que enviamos al servidor (POST /auth/login).
+// Va el correo O el teléfono, nunca los dos: el que queda en null no se manda.
 data class LoginRequest(
-    val email: String,
+    val email: String? = null,
+    val number: String? = null,   // teléfono con lada: "+525512345678"
     val password: String
 )
 

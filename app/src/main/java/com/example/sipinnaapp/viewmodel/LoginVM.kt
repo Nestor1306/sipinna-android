@@ -55,119 +55,72 @@ class LoginVM(
     }
 
     fun login() {
+        // El mismo campo sirve para correo o teléfono
+        val usuario = _estado.value.email.trim()
+        val password = _estado.value.password
 
-        val email =
-            _estado.value.email.trim()
+        val esCorreo = usuario.contains("@")
+        // Si escribió "+52 55 1234 5678", nos quedamos con los 10 dígitos
+        val digitos = usuario.filter { it.isDigit() }.let {
+            if (it.length == 12 && it.startsWith("52")) it.drop(2) else it
+        }
 
-        val password =
-            _estado.value.password
-
-        if (email.isEmpty()) {
-
-            _estado.value =
-                _estado.value.copy(
-                    error = "El email es obligatorio"
-                )
-
+        val error = when {
+            usuario.isEmpty() -> "Escribe tu correo o tu teléfono"
+            esCorreo && !RegistroVM.correoValido(usuario) -> "El correo no es válido"
+            !esCorreo && !RegistroVM.telefonoValido(digitos) ->
+                "El teléfono debe tener ${RegistroVM.DIGITOS_TELEFONO} dígitos"
+            // 6 y no 10: las cuentas que se crearon antes de las reglas nuevas siguen entrando
+            password.length < 6 -> "La contraseña debe tener al menos 6 caracteres"
+            else -> ""
+        }
+        if (error.isNotEmpty()) {
+            _estado.value = _estado.value.copy(error = error)
             return
         }
 
-        if (!email.contains("@")) {
-
-            _estado.value =
-                _estado.value.copy(
-                    error = "El email no es válido"
-                )
-
-            return
-        }
-
-        if (password.length < 6) {
-
-            _estado.value =
-                _estado.value.copy(
-                    error = "La contraseña debe tener al menos 6 caracteres"
-                )
-
-            return
+        val credenciales = if (esCorreo) {
+            LoginRequest(email = usuario, password = password)
+        } else {
+            LoginRequest(number = "+52$digitos", password = password)   // así se guardó al registrarse
         }
 
         _estado.value = _estado.value.copy(cargando = true)
 
-
         viewModelScope.launch {
-            _estado.value = _estado.value.copy(cargando = true)
-
             try {
-
-                val credenciales =
-                    LoginRequest(
-                        email,
-                        password
-                    )
-
-                val respuesta =
-                    RetrofitClient.api.login(
-                        credenciales
-                    )
+                val respuesta = RetrofitClient.api.login(credenciales)
 
                 if (respuesta.isSuccessful) {
-
-                    val datos =
-                        respuesta.body()
-
+                    val datos = respuesta.body()
                     // El token no viene en el cuerpo: viene en la cookie "session_token"
-                    val token =
-                        sacarTokenDeCookie(respuesta)
+                    val token = sacarTokenDeCookie(respuesta)
 
                     if (datos != null && token.isNotBlank()) {
-
                         val nombre = datos.name ?: ""
-
-                        sessionManager.guardarSesion(
+                        sessionManager.guardarSesion(token = token, nombre = nombre, esAnonimo = false)
+                        _estado.value = _estado.value.copy(
+                            cargando = false,
+                            loginExitoso = true,
                             token = token,
-                            nombre = nombre,
+                            nombreUsuario = nombre,
                             esAnonimo = false
                         )
-
-                        _estado.value =
-                            _estado.value.copy(
-                                cargando = false,
-                                loginExitoso = true,
-                                token = token,
-                                nombreUsuario = nombre,
-                                esAnonimo = false
-                            )
                     } else {
-
-                        _estado.value =
-                            _estado.value.copy(
-                                cargando = false,
-                                error = "El servidor no devolvió datos"
-                            )
-                    }
-
-                } else {
-
-                    // 401 = el servidor no reconoció el correo o la contraseña
-                    val mensaje =
-                        if (respuesta.code() == 401) "Correo o contraseña incorrectos"
-                        else mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
-
-                    _estado.value =
-                        _estado.value.copy(
+                        _estado.value = _estado.value.copy(
                             cargando = false,
-                            error = mensaje
+                            error = "El servidor no devolvió datos"
                         )
+                    }
+                } else {
+                    // 401 = el servidor no reconoció el correo/teléfono o la contraseña
+                    val mensaje =
+                        if (respuesta.code() == 401) "Correo, teléfono o contraseña incorrectos"
+                        else mensajeDeRespuesta(respuesta.code(), respuesta.errorBody()?.string())
+                    _estado.value = _estado.value.copy(cargando = false, error = mensaje)
                 }
-
             } catch (e: Exception) {
-
-                _estado.value =
-                    _estado.value.copy(
-                        cargando = false,
-                        error = mensajeDeExcepcion(e)
-                    )
+                _estado.value = _estado.value.copy(cargando = false, error = mensajeDeExcepcion(e))
             }
         }
     }
