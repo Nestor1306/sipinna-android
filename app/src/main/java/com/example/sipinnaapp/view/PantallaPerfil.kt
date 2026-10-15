@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -66,24 +65,14 @@ fun PantallaPerfil(
 
         Espacio(28.dp)
 
-        // Nombre + lápiz para editar
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = nombre.ifBlank { "Ciudadano" },
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            IconButton(onClick = { /* pendiente: editar nombre */ }, modifier = Modifier.size(24.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Editar nombre",
-                    tint = AzulEditar,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        // Nombre del usuario
+        Text(
+            text = nombre.ifBlank { "Ciudadano" },
+            fontSize = 25.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            textAlign = TextAlign.Center
+        )
 
         Espacio(6.dp)
 
