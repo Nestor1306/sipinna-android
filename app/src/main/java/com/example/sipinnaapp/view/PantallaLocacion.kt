@@ -40,6 +40,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(MapboxExperimental::class)
 @Composable
@@ -68,35 +72,29 @@ fun PantallaLocacion(
     }
 
     // Convierte coordenadas a una dirección escrita.
-    fun obtenerDireccion(
-        latitud: Double,
-        longitud: Double
-    ) {
+    // El Geocoder tarda (usa internet), así que corre en segundo plano para no congelar
+    // la pantalla. Si se toca el mapa otra vez antes de que termine, la búsqueda anterior
+    // se cancela para que no sobrescriba la dirección nueva.
+    val alcance = rememberCoroutineScope()
+    var busquedaDireccion by remember { mutableStateOf<Job?>(null) }
 
-        try {
-
-            val direcciones =
-                Geocoder(
-                    contexto,
-                    Locale.getDefault()
-                ).getFromLocation(
-                    latitud,
-                    longitud,
-                    1
-                )
-
-            val primera =
-                direcciones
-                    ?.firstOrNull()
-                    ?.getAddressLine(0)
-
+    fun obtenerDireccion(latitud: Double, longitud: Double) {
+        busquedaDireccion?.cancel()
+        busquedaDireccion = alcance.launch {
+            val primera = withContext(Dispatchers.IO) {
+                try {
+                    @Suppress("DEPRECATION")
+                    Geocoder(contexto, Locale.getDefault())
+                        .getFromLocation(latitud, longitud, 1)
+                        ?.firstOrNull()
+                        ?.getAddressLine(0)
+                } catch (_: Exception) {
+                    null   // si falla, las coordenadas se conservan
+                }
+            }
             if (!primera.isNullOrEmpty()) {
                 vm.actualizarDireccion(primera)
             }
-
-        } catch (_: Exception) {
-            // Si falla el Geocoder,
-            // las coordenadas se conservan.
         }
     }
 
