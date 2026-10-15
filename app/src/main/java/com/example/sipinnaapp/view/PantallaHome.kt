@@ -384,19 +384,6 @@ fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
                     )
                 }
             }
-
-            // Los confirmados muestran su folio abajo a la derecha
-            if (info.detalle.isEmpty()) {
-                Text(
-                    text = reporte.folio ?: "",
-                    fontSize = 13.sp,   // el folio es largo: "RIETI-ATIZAPAN-2026-000001"
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 12.dp, bottom = 8.dp)
-                )
-            }
         }
     }
 }

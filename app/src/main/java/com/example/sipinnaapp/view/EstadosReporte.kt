@@ -13,8 +13,7 @@ private val NaranjaReincidente = Color(0xFFE67E22)
 data class InfoEstado(
     val titulo: String,
     val color: Color,
-    val detalle: String,
-    val mostrarFolio: Boolean = false   // la tarjeta del Home muestra el folio abajo a la derecha
+    val detalle: String
 )
 
 // Los estados del reporte, en el orden en que avanza un reporte.
@@ -49,30 +48,26 @@ fun infoDeEstado(estado: String?): InfoEstado {
             detalle = "Estamos verificando la información de tu reporte."
         )
 
-        // --- Validado y en atención (verde): muestran el folio en la tarjeta ---
+        // --- Validado y en atención (verde) ---
         "en_seguimiento" -> InfoEstado(
             titulo = "En seguimiento",
             color = VerdeConfirmado,
-            detalle = "Tu reporte fue validado y se le da seguimiento.",
-            mostrarFolio = true
+            detalle = "Tu reporte fue validado y se le da seguimiento."
         )
         "canalizado" -> InfoEstado(
             titulo = "Canalizado",
             color = VerdeConfirmado,
-            detalle = "Se turnó a la autoridad correspondiente.",
-            mostrarFolio = true
+            detalle = "Se turnó a la autoridad correspondiente."
         )
         "concluido" -> InfoEstado(
             titulo = "Concluido",
             color = VerdeConfirmado,
-            detalle = "La atención de tu reporte terminó.",
-            mostrarFolio = true
+            detalle = "La atención de tu reporte terminó."
         )
         "reincidente" -> InfoEstado(
             titulo = "Reincidente",
             color = NaranjaReincidente,
-            detalle = "Ya había reportes de este caso; se suma a su seguimiento.",
-            mostrarFolio = true
+            detalle = "Ya había reportes de este caso; se suma a su seguimiento."
         )
 
         // --- Cerrados sin atención (rojo) ---
