@@ -26,6 +26,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 
 // --- Componentes reutilizables del flujo de reporte (según Figma) ---
 
@@ -55,7 +56,7 @@ fun EncabezadoPaso(
         Espacio(4.dp)
         Text(
             text = subtitulo,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = GrisTexto,
             lineHeight = 14.sp
         )
@@ -160,7 +161,7 @@ fun ChipOpcion(
 fun EtiquetaPregunta(texto: String) {
     Text(
         text = texto.uppercase(),
-        fontSize = 10.sp,
+        fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         color = Teal,
         letterSpacing = 1.sp
@@ -178,7 +179,12 @@ fun CampoBusqueda(
     TextField(
         value = valor,
         onValueChange = alCambiar,
-        placeholder = { Text(placeholder, fontSize = 13.sp, color = GrisIcono) },
+        placeholder = {
+            Text(
+                placeholder, fontSize = 13.sp, color = GrisIcono,
+                maxLines = 1, overflow = TextOverflow.Ellipsis   // con letra grande: "Busca por folio o…"
+            )
+        },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,

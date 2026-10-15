@@ -82,7 +82,7 @@ fun PantallaFotos(
         Text(
             text = "${estado.fotos.size} de ${ReporteVM.MAX_FOTOS} fotos" +
                 if (ReporteVM.FOTO_OBLIGATORIA) " (mínimo 1)" else " (opcional)",
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = GrisTexto
         )
 

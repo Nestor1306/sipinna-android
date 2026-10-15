@@ -144,7 +144,7 @@ fun PantallaReporteEnviado(
                         estado.fotos.forEach { uri ->
                             AsyncImage(
                                 model = uri,
-                                contentDescription = null,
+                                contentDescription = "Foto del lugar",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .weight(1f)

@@ -143,7 +143,7 @@ fun PantallaHome(
                             DropdownMenuItem(
                                 text = { Text(etiqueta) },
                                 leadingIcon = {
-                                    if (filtroEstado == valor) Icon(Icons.Default.Check, contentDescription = null, tint = Teal)
+                                    if (filtroEstado == valor) Icon(Icons.Default.Check, contentDescription = "Seleccionado", tint = Teal)
                                 },
                                 onClick = {
                                     filtroEstado = valor
@@ -162,7 +162,7 @@ fun PantallaHome(
                             DropdownMenuItem(
                                 text = { Text(etiqueta) },
                                 leadingIcon = {
-                                    if (masAntiguosPrimero == antiguos) Icon(Icons.Default.Check, contentDescription = null, tint = Teal)
+                                    if (masAntiguosPrimero == antiguos) Icon(Icons.Default.Check, contentDescription = "Seleccionado", tint = Teal)
                                 },
                                 onClick = {
                                     masAntiguosPrimero = antiguos
@@ -330,36 +330,39 @@ fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(85.dp)
+            .heightIn(min = 85.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
 
             // Lado izquierdo: mapa del lugar del reporte, con el corte diagonal
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .width(165.dp)
-                    .fillMaxHeight()
-                    .clip(FormaDiagonal)
-                    .background(Teal.copy(alpha = 0.15f))
-            ) {
-                // Primero el pin sobre el fondo. Si el mapa carga, queda encima y lo tapa;
-                // si no carga (sin internet, o la clave de Mapbox no lo permite), se ve el pin.
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = null,
-                    tint = Teal,
+            // matchParentSize: el mapa toma la altura que tenga la tarjeta (la define el texto)
+            Box(modifier = Modifier.matchParentSize()) {
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(24.dp)
-                        .offset(x = (-14).dp)
-                )
-                if (reporte.latitude != null && reporte.longitude != null) {
-                    AsyncImage(
-                        model = urlMapa(reporte.latitude, reporte.longitude, tokenMapbox),
-                        contentDescription = "Mapa del lugar del reporte",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        .width(165.dp)
+                        .fillMaxHeight()
+                        .clip(FormaDiagonal)
+                        .background(Teal.copy(alpha = 0.15f))
+                ) {
+                    // Primero el pin sobre el fondo. Si el mapa carga, queda encima y lo tapa;
+                    // si no carga (sin internet, o la clave de Mapbox no lo permite), se ve el pin.
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = null,
+                        tint = Teal,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .offset(x = (-14).dp)
                     )
+                    if (reporte.latitude != null && reporte.longitude != null) {
+                        AsyncImage(
+                            model = urlMapa(reporte.latitude, reporte.longitude, tokenMapbox),
+                            contentDescription = "Mapa del lugar del reporte",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
 
@@ -368,7 +371,7 @@ fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 11.dp, end = 12.dp)
+                    .padding(top = 11.dp, end = 12.dp, bottom = 11.dp)
                     .width(188.dp)
             ) {
                 Text(
@@ -381,11 +384,11 @@ fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
                 if (detalle.isNotEmpty()) {
                     Text(
                         text = detalle,
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = GrisTextoClaro,
                         textAlign = TextAlign.End,
-                        lineHeight = 12.sp
+                        lineHeight = 15.sp
                     )
                 }
             }

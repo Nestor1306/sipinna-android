@@ -68,7 +68,7 @@ fun PantallaInfoNino(
             TituloPregunta("¿Qué tipo de trabajo está realizando?")
             Text(
                 text = "Puedes seleccionar más de una opción (\"Otro\" va sola)",
-                fontSize = 10.sp,
+                fontSize = 12.sp,
                 color = GrisTexto
             )
             Espacio(10.dp)

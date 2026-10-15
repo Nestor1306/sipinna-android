@@ -149,7 +149,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
             Espacio(6.dp)
             Text(
                 text = "Última actualización: ${fechaLegible(detalle.state_changed_at)}",
-                fontSize = 11.sp,
+                fontSize = 12.sp,
                 color = GrisTextoClaro
             )
         }
@@ -216,7 +216,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
             )
             if (!detalle.zone_name.isNullOrBlank()) {
                 Espacio(4.dp)
-                Text("Zona: ${detalle.zone_name}", fontSize = 11.sp, color = GrisTexto)
+                Text("Zona: ${detalle.zone_name}", fontSize = 12.sp, color = GrisTexto)
             }
         }
 
@@ -257,7 +257,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
                     }
                 }
                 Espacio(6.dp)
-                Text("Toca una foto para verla completa", fontSize = 10.sp, color = GrisTexto)
+                Text("Toca una foto para verla completa", fontSize = 12.sp, color = GrisTexto)
             }
         }
 

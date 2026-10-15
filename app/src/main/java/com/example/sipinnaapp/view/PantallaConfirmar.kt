@@ -150,7 +150,7 @@ fun PantallaConfirmar(
                     estado.fotos.forEach { uri ->
                         AsyncImage(
                             model = uri,
-                            contentDescription = null,
+                            contentDescription = "Foto del lugar",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(56.dp)
@@ -166,7 +166,7 @@ fun PantallaConfirmar(
                     ) {
                         Text(
                             text = "${estado.fotos.size} foto${if (estado.fotos.size == 1) "" else "s"}",
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = GrisTexto
                         )
                     }
@@ -214,9 +214,9 @@ fun PantallaConfirmar(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("¿Algo incorrecto? ", fontSize = 11.sp, color = GrisTexto)
+                Text("¿Algo incorrecto? ", fontSize = 12.sp, color = GrisTexto)
                 TextButton(onClick = { vm.irAPaso(1) }, contentPadding = PaddingValues(0.dp)) {
-                    Text("Editar reporte", fontSize = 11.sp, color = Teal, fontWeight = FontWeight.SemiBold)
+                    Text("Editar reporte", fontSize = 12.sp, color = Teal, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -265,7 +265,7 @@ fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = n
         Spacer(Modifier.width(6.dp))
         Text(
             text = texto.uppercase(),
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             letterSpacing = 1.sp,
@@ -275,10 +275,9 @@ fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = n
         if (alEditar != null) {
             TextButton(
                 onClick = alEditar,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                modifier = Modifier.height(28.dp)
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
             ) {
-                Text("Editar", fontSize = 11.sp, color = Teal, fontWeight = FontWeight.SemiBold)
+                Text("Editar", fontSize = 12.sp, color = Teal, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -286,7 +285,7 @@ fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = n
 
 @Composable
 fun EtiquetaGris(texto: String) {
-    Text(texto.uppercase(), fontSize = 9.sp, color = GrisTexto, letterSpacing = 0.5.sp)
+    Text(texto.uppercase(), fontSize = 11.sp, color = GrisTexto, letterSpacing = 0.5.sp)
 }
 
 @Composable
@@ -297,7 +296,7 @@ fun ChipResumen(texto: String) {
             .background(Teal.copy(alpha = 0.12f))
             .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
-        Text(texto, fontSize = 11.sp, color = TealOscuro, fontWeight = FontWeight.Medium)
+        Text(texto, fontSize = 12.sp, color = TealOscuro, fontWeight = FontWeight.Medium)
     }
 }
 

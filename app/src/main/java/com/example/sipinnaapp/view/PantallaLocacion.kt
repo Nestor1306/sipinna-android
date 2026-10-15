@@ -371,7 +371,7 @@ fun PantallaLocacion(
                                     if (lugar.direccion.isNotBlank() && lugar.direccion != lugar.nombre) {
                                         Text(
                                             text = lugar.direccion,
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             color = GrisTexto,
                                             maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
