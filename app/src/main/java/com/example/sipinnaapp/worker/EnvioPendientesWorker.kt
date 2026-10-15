@@ -16,6 +16,7 @@ import com.example.sipinnaapp.data.enviarReporteCompleto
 import com.example.sipinnaapp.network.cookieDeSesion
 import java.io.File
 import java.util.concurrent.TimeUnit
+import com.example.sipinnaapp.data.Cifrado
 
 // Envía los reportes que se guardaron sin internet.
 // WorkManager lo ejecuta en cuanto hay conexión, aunque la app esté cerrada,
@@ -29,7 +30,9 @@ class EnvioPendientesWorker(contexto: Context, parametros: WorkerParameters) :
 
         for (pendiente in pendientes) {
             val fotos = pendiente.fotos.map { File(it) }.filter { it.exists() }
-            val sesion = pendiente.token.ifBlank { null }?.let { cookieDeSesion(it) }
+            // El token viene cifrado; los pendientes de versiones anteriores lo traen sin cifrar
+            val token = Cifrado.descifrar(pendiente.token) ?: pendiente.token
+            val sesion = token.ifBlank { null }?.let { cookieDeSesion(it) }
 
             var resultado = enviarReporteCompleto(sesion, pendiente.peticion, fotos)
 

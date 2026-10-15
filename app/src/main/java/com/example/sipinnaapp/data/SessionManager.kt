@@ -17,8 +17,20 @@ class SessionManager(context: Context) {
         context.getSharedPreferences("sesion", Context.MODE_PRIVATE)
 
     fun leerSesion(): SesionUsuario {
+        // Las versiones anteriores guardaban el token sin cifrar ("token").
+        // Si existe, se cifra ahora y se borra el viejo.
+        val tokenViejo = preferencias.getString("token", null)
+        if (!tokenViejo.isNullOrEmpty()) {
+            preferencias.edit()
+                .putString("token_cifrado", Cifrado.cifrar(tokenViejo))
+                .remove("token")
+                .apply()
+        }
+
+        val token = Cifrado.descifrar(preferencias.getString("token_cifrado", "") ?: "") ?: ""
+
         return SesionUsuario(
-            token = preferencias.getString("token", "") ?: "",
+            token = token,
             nombre = preferencias.getString("nombre", "") ?: "",
             esAnonimo = preferencias.getBoolean("es_anonimo", false)
         )
@@ -26,7 +38,7 @@ class SessionManager(context: Context) {
 
     fun guardarSesion(token: String, nombre: String, esAnonimo: Boolean) {
         preferencias.edit()
-            .putString("token", token)
+            .putString("token_cifrado", Cifrado.cifrar(token))   // nunca en texto plano
             .putString("nombre", nombre)
             .putBoolean("es_anonimo", esAnonimo)
             .apply()

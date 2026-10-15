@@ -13,7 +13,7 @@ data class ReportePendiente(
     val id: String,
     val peticion: ReporteRequest,   // el mismo JSON del paso 1
     val fotos: List<String>,        // rutas de las fotos ya reducidas a JPEG
-    val token: String,              // sesión con la que se hizo ("" = anónimo)
+    val token: String,              // sesión con la que se hizo, CIFRADA ("" = anónimo)
     val creadoEn: Long
 )
 
@@ -35,7 +35,9 @@ object ReportesPendientes {
         val rutas = fotos.mapIndexed { i, bytes ->
             File(carpeta, "foto${i + 1}.jpg").apply { writeBytes(bytes) }.absolutePath
         }
-        val pendiente = ReportePendiente(id, peticion, rutas, token, System.currentTimeMillis())
+
+        // El token se guarda cifrado (ver Cifrado.kt)
+        val pendiente = ReportePendiente(id, peticion, rutas, Cifrado.cifrar(token), System.currentTimeMillis())
 
         // El JSON se escribe al final: si la app se cierra a medias, la carpeta
         // sin reporte.json simplemente se ignora
