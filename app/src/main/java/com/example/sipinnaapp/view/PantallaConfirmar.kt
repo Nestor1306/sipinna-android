@@ -64,13 +64,13 @@ fun PantallaConfirmar(
                 .padding(horizontal = 6.dp, vertical = 4.dp)
         ) {
             IconButton(onClick = alRegresar) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.Black)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = TextoPrincipal)
             }
             Text(
                 text = "Confirmación del reporte",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = TextoPrincipal,
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(48.dp))
@@ -103,7 +103,7 @@ fun PantallaConfirmar(
                     ) {
                         EtiquetaGris("Fecha y hora")
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(fecha, fontSize = 12.sp, color = Color.Black)
+                            Text(fecha, fontSize = 12.sp, color = TextoPrincipal)
                             Spacer(Modifier.width(4.dp))
                             Icon(
                                 Icons.Default.Edit,
@@ -136,7 +136,7 @@ fun PantallaConfirmar(
                 Text(
                     text = estado.direccion.ifBlank { "%.5f, %.5f".format(estado.latitud, estado.longitud) },
                     fontSize = 12.sp,
-                    color = Color.Black
+                    color = TextoPrincipal
                 )
             }
 
@@ -179,7 +179,7 @@ fun PantallaConfirmar(
             TarjetaResumen {
                 TituloSeccion(Icons.Default.Edit, "Descripción", alEditar = { if (!estado.cargando) vm.editarDesdeConfirmar(4) })
                 Espacio(8.dp)
-                Text(estado.descripcion, fontSize = 12.sp, color = Color.Black)
+                Text(estado.descripcion, fontSize = 12.sp, color = TextoPrincipal)
             }
 
             Espacio(12.dp)
@@ -267,7 +267,7 @@ fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = n
             text = texto.uppercase(),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = TextoPrincipal,
             letterSpacing = 1.sp,
             modifier = if (alEditar != null) Modifier.weight(1f) else Modifier
         )

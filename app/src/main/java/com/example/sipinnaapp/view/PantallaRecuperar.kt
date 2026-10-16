@@ -51,10 +51,10 @@ fun PantallaRecuperar(
             .padding(horizontal = 24.dp)
     ) {
         IconButton(onClick = alRegresar, modifier = Modifier.offset(x = (-12).dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.Black)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = TextoPrincipal)
         }
 
-        Text("Recuperar contraseña", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Text("Recuperar contraseña", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextoPrincipal)
         Espacio(8.dp)
 
         if (!estado.codigoEnviado) {

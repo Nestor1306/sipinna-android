@@ -43,7 +43,7 @@ fun EncabezadoPaso(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Regresar",
-                tint = Color.Black
+                tint = TextoPrincipal
             )
         }
 
@@ -51,7 +51,7 @@ fun EncabezadoPaso(
             text = titulo,
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = TextoPrincipal
         )
         Espacio(4.dp)
         Text(
@@ -151,7 +151,7 @@ fun ChipOpcion(
             text = texto,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = if (seleccionado) Color.White else Color.Black
+            color = if (seleccionado) Color.White else TextoPrincipal
         )
     }
 }

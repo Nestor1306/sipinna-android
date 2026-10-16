@@ -350,7 +350,7 @@ fun EtiquetaCampo(texto: String) {
         text = texto,
         fontSize = 13.sp,
         fontWeight = FontWeight.Medium,
-        color = Color.Black
+        color = TextoPrincipal
     )
 }
 
@@ -370,7 +370,7 @@ fun SelectorGenero(
         Text(
             text = seleccion.ifEmpty { "Selecciona" },
             fontSize = 14.sp,
-            color = if (seleccion.isEmpty()) GrisTextoClaro else Color.Black,
+            color = if (seleccion.isEmpty()) GrisTextoClaro else TextoPrincipal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,   // "Prefiero no mencionarlo" se corta con "…"
             modifier = Modifier.weight(1f)
@@ -396,7 +396,7 @@ fun SelectorGenero(
                 Text(
                     text = seleccion.ifEmpty { "Selecciona tu género" },
                     fontSize = if (seleccion.isEmpty()) 14.sp else 16.sp,
-                    color = if (seleccion.isEmpty()) GrisTextoClaro else Color.Black,
+                    color = if (seleccion.isEmpty()) GrisTextoClaro else TextoPrincipal,
                     modifier = Modifier.weight(1f)
                 )
                 Icon(Icons.Default.ArrowDropDown, contentDescription = "Abrir opciones", tint = GrisIcono)

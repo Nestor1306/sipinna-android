@@ -364,7 +364,7 @@ fun PantallaLocacion(
                                         text = lugar.nombre,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color.Black,
+                                        color = TextoPrincipal,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )

@@ -102,7 +102,7 @@ fun PantallaPerfil(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Regresar",
-                    tint = Color.Black
+                    tint = TextoPrincipal
                 )
             }
         }
@@ -116,7 +116,7 @@ fun PantallaPerfil(
                 .size(175.dp)
                 .clip(CircleShape)
                 .background(SuperficieSecundaria)
-                .border(1.dp, Color.Black, CircleShape)
+                .border(1.dp, TextoPrincipal, CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
@@ -133,7 +133,7 @@ fun PantallaPerfil(
             text = nombre.ifBlank { "Ciudadano" },
             fontSize = 25.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = TextoPrincipal,
             textAlign = TextAlign.Center
         )
 

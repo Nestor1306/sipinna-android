@@ -58,13 +58,13 @@ fun PantallaDetalleReporte(
                 .padding(horizontal = 6.dp, vertical = 4.dp)
         ) {
             IconButton(onClick = alRegresar) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.Black)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = TextoPrincipal)
             }
             Text(
                 text = "Detalle del reporte",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = TextoPrincipal,
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(48.dp))
@@ -176,7 +176,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
             if (!detalle.sighting_time.isNullOrBlank()) {
                 Espacio(10.dp)
                 EtiquetaGris("Visto el")
-                Text(fechaLegible(detalle.sighting_time), fontSize = 12.sp, color = Color.Black)
+                Text(fechaLegible(detalle.sighting_time), fontSize = 12.sp, color = TextoPrincipal)
             }
         }
 
@@ -212,7 +212,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
                     else "Sin ubicación"
                 },
                 fontSize = 12.sp,
-                color = Color.Black
+                color = TextoPrincipal
             )
             if (!detalle.zone_name.isNullOrBlank()) {
                 Espacio(4.dp)
@@ -267,7 +267,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
         TarjetaResumen {
             TituloSeccion(Icons.Default.Edit, "Descripción")
             Espacio(8.dp)
-            Text(partes.texto.ifBlank { "—" }, fontSize = 12.sp, color = Color.Black)
+            Text(partes.texto.ifBlank { "—" }, fontSize = 12.sp, color = TextoPrincipal)
         }
 
         Espacio(12.dp)

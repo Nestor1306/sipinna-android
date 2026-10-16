@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // Rojo más oscuro que RojoNoApto para que el texto blanco se lea bien
-private val RojoAviso = Color(0xFFC62828)
+private val RojoAviso = Color(0xFFB42332)   // rojo de la paleta de la web
 
 // Aviso antes de entrar sin cuenta: sin registrarse no se puede dar seguimiento al reporte
 @Composable

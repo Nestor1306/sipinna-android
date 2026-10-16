@@ -2,12 +2,15 @@ package com.example.sipinnaapp.view
 
 import androidx.compose.ui.graphics.Color
 import com.example.sipinnaapp.ui.theme.AmarilloProgreso
+import com.example.sipinnaapp.ui.theme.AzulInstitucional
 import com.example.sipinnaapp.ui.theme.GrisIcono
+import com.example.sipinnaapp.ui.theme.Magenta
+import com.example.sipinnaapp.ui.theme.Morado
 import com.example.sipinnaapp.ui.theme.RojoNoApto
+import com.example.sipinnaapp.ui.theme.TextoSecundario
 import com.example.sipinnaapp.ui.theme.VerdeConfirmado
 
-// Naranja para "Reincidente" (ya había reportes del mismo caso)
-private val NaranjaReincidente = Color(0xFFE67E22)
+// Los colores de cada estado son los mismos que usa la web (dashboard de www.sipinna.com)
 
 // Cómo se ve cada estado del reporte en pantalla
 data class InfoEstado(
@@ -41,24 +44,26 @@ fun infoDeEstado(estado: String?): InfoEstado {
             detalle = "Sin conexión. Se enviará automáticamente cuando haya internet."
         )
 
-        // --- En proceso (amarillo) ---
+        // --- En proceso (morado) ---
         "en_revision" -> InfoEstado(
             titulo = "En revisión",
-            color = AmarilloProgreso,
+            color = Morado,
             detalle = "Estamos verificando la información de tu reporte."
         )
-
-        // --- Validado y en atención (verde) ---
         "en_seguimiento" -> InfoEstado(
             titulo = "En seguimiento",
-            color = VerdeConfirmado,
+            color = Morado,
             detalle = "Tu reporte fue validado y se le da seguimiento."
         )
+
+        // --- Turnado a otra autoridad (azul) ---
         "canalizado" -> InfoEstado(
             titulo = "Canalizado",
-            color = VerdeConfirmado,
+            color = AzulInstitucional,
             detalle = "Se turnó a la autoridad correspondiente."
         )
+
+        // --- Resuelto (verde) ---
         "concluido" -> InfoEstado(
             titulo = "Concluido",
             color = VerdeConfirmado,
@@ -66,14 +71,14 @@ fun infoDeEstado(estado: String?): InfoEstado {
         )
         "reincidente" -> InfoEstado(
             titulo = "Reincidente",
-            color = NaranjaReincidente,
+            color = Magenta,
             detalle = "Ya había reportes de este caso; se suma a su seguimiento."
         )
 
-        // --- Cerrados sin atención (rojo) ---
+        // --- Cerrados sin atención (gris y rojo) ---
         "archivado" -> InfoEstado(
             titulo = "Archivado",
-            color = RojoNoApto,
+            color = TextoSecundario,
             detalle = "No fue posible validar la información proporcionada."
         )
         "cancelado" -> InfoEstado(
@@ -82,7 +87,7 @@ fun infoDeEstado(estado: String?): InfoEstado {
             detalle = "Este reporte fue cancelado."
         )
 
-        // "registrado" (así empieza todo reporte) o cualquier estado nuevo
+        // "registrado" (así empieza todo reporte) o cualquier estado nuevo. Pendiente (ámbar).
         else -> InfoEstado(
             titulo = "Registrado",
             color = AmarilloProgreso,

@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sipinnaapp.ui.theme.GrisTexto
+import com.example.sipinnaapp.ui.theme.TextoPrincipal
 import com.example.sipinnaapp.viewmodel.ReporteVM
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -124,6 +125,6 @@ fun TituloPregunta(texto: String) {
         text = texto,
         fontSize = 15.sp,
         fontWeight = FontWeight.SemiBold,
-        color = Color.Black
+        color = TextoPrincipal
     )
 }

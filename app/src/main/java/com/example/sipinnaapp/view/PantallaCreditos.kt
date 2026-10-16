@@ -65,7 +65,7 @@ fun PantallaCreditos(
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             IconButton(onClick = alRegresar, modifier = Modifier.offset(x = (-12).dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.Black)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = TextoPrincipal)
             }
         }
 
@@ -79,7 +79,7 @@ fun PantallaCreditos(
                 .padding(8.dp)
         )
         Espacio(12.dp)
-        Text("SIPINNA", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Text("SIPINNA", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextoPrincipal)
         if (version.isNotBlank()) {
             Text("Versión $version", fontSize = 13.sp, color = GrisTexto)
         }
@@ -102,7 +102,7 @@ fun PantallaCreditos(
                     Text(
                         integrante.nombre,
                         fontSize = 15.sp,
-                        color = Color.Black,
+                        color = TextoPrincipal,
                         modifier = Modifier.weight(1f)
                     )
                     if (integrante.matricula.isNotBlank()) {
@@ -150,6 +150,6 @@ private fun TarjetaCreditos(titulo: String, contenido: @Composable ColumnScope.(
 private fun DatoCredito(etiqueta: String, valor: String) {
     Column(modifier = Modifier.padding(vertical = 5.dp)) {
         Text(etiqueta, fontSize = 12.sp, color = GrisTexto)
-        Text(valor, fontSize = 15.sp, color = Color.Black)
+        Text(valor, fontSize = 15.sp, color = TextoPrincipal)
     }
 }

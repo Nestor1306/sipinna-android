@@ -292,7 +292,7 @@ fun BotonFiltro(alPresionar: () -> Unit, activo: Boolean = false) {
         Icon(
             imageVector = Icons.Default.FilterList,
             contentDescription = if (activo) "Filtrar (hay un filtro activo)" else "Filtrar",
-            tint = if (activo) Color.White else Color.Black,
+            tint = if (activo) Color.White else TextoPrincipal,
             modifier = Modifier.size(20.dp)
         )
     }
@@ -418,7 +418,7 @@ fun FolioCopiable(folio: String, tamano: TextUnit = 12.sp) {
             }
             .padding(vertical = 2.dp)
     ) {
-        Text(folio, fontSize = tamano, fontWeight = FontWeight.Bold, color = Color.Black)
+        Text(folio, fontSize = tamano, fontWeight = FontWeight.Bold, color = TextoPrincipal)
         Spacer(Modifier.width(6.dp))
         Icon(Icons.Default.ContentCopy, contentDescription = "Copiar folio", tint = Teal, modifier = Modifier.size(16.dp))
     }

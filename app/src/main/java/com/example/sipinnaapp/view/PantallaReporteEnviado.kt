@@ -41,10 +41,10 @@ fun PantallaReporteEnviado(
             modifier = Modifier.fillMaxWidth()
         ) {
             IconButton(onClick = alCerrar, modifier = Modifier.offset(x = (-12).dp)) {
-                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.Black, modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = TextoPrincipal, modifier = Modifier.size(28.dp))
             }
             IconButton(onClick = { /* pendiente: info */ }) {
-                Icon(Icons.Default.Info, contentDescription = "Información", tint = Color.Black, modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Info, contentDescription = "Información", tint = TextoPrincipal, modifier = Modifier.size(28.dp))
             }
         }
 
@@ -82,7 +82,7 @@ fun PantallaReporteEnviado(
                 text = "Enviado de forma anónima",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = TextoPrincipal
             )
             Espacio(4.dp)
             Text(
@@ -95,7 +95,7 @@ fun PantallaReporteEnviado(
                 if (estado.folioGenerado.startsWith("RIETI")) {
                     // Folio real: se puede tocar para copiarlo
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Folio: ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                        Text("Folio: ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextoPrincipal)
                         FolioCopiable(estado.folioGenerado, tamano = 14.sp)
                     }
                 } else {
@@ -103,7 +103,7 @@ fun PantallaReporteEnviado(
                         text = "Folio: ${estado.folioGenerado}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = TextoPrincipal
                     )
                 }
         }
@@ -135,7 +135,7 @@ fun PantallaReporteEnviado(
                     text = "¡Gracias por contribuir!",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = TextoPrincipal
                 )
 
                 if (estado.fotos.isNotEmpty()) {
@@ -164,7 +164,7 @@ fun PantallaReporteEnviado(
                         .background(Color.White)
                         .padding(12.dp)
                 ) {
-                    Text(estado.descripcion, fontSize = 13.sp, color = Color.Black)
+                    Text(estado.descripcion, fontSize = 13.sp, color = TextoPrincipal)
                 }
             }
         }

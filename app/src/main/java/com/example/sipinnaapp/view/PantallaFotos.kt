@@ -137,7 +137,7 @@ fun CuadroAgregarFoto(alPresionar: () -> Unit, modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Default.Add,
             contentDescription = "Agregar foto",
-            tint = Color.Black,
+            tint = TextoPrincipal,
             modifier = Modifier.size(48.dp)
         )
     }

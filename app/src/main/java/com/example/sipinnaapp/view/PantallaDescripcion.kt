@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sipinnaapp.ui.theme.GrisBarra
 import com.example.sipinnaapp.ui.theme.GrisTexto
+import com.example.sipinnaapp.ui.theme.TextoPrincipal
 import com.example.sipinnaapp.ui.theme.Teal
 import com.example.sipinnaapp.viewmodel.ReporteVM
 import androidx.compose.ui.Alignment
@@ -42,7 +43,7 @@ fun PantallaDescripcion(
             text = "¿Qué pasó?",
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Black
+            color = TextoPrincipal
         )
 
         Espacio(8.dp)
