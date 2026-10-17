@@ -27,6 +27,8 @@ import com.example.sipinnaapp.network.cookieDeSesion
 import com.example.sipinnaapp.view.infoDeEstado
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import com.example.sipinnaapp.view.estadoPublico
+import android.util.Log
 
 // Cada ~15 minutos (aunque la app esté cerrada) revisa si algún reporte cambió de estado
 // y, si sí, avisa con una notificación.
@@ -48,7 +50,9 @@ class RevisarEstadosWorker(contexto: Context, parametros: WorkerParameters) :
         // 401 (sesión vencida) u otro error del servidor: no se avisa nada
         if (!respuesta.isSuccessful) return Result.success()
 
-        val reportes = (respuesta.body()?.reports ?: emptyList()).filter { it.report_state != "DRAFT" }
+        val reportes = (respuesta.body()?.reports ?: emptyList())
+            .filter { estadoPublico(it.report_state) != "borrador" }
+
         val anteriores = EstadosConocidos.leer(app)
 
         // La primera vez solo se guardan los estados; no hay con qué comparar
@@ -57,7 +61,11 @@ class RevisarEstadosWorker(contexto: Context, parametros: WorkerParameters) :
                 val folio = reporte.folio ?: continue
                 val estado = reporte.report_state ?: continue
                 val antes = anteriores[folio] ?: continue   // reporte nuevo: no se avisa
-                if (estado != antes) avisar(app, folio, estado)
+                // Se compara ya traducido: "registrado" (viejo) y "recibido" (nuevo) son lo mismo
+                if (estadoPublico(estado) != estadoPublico(antes)) {
+                    Log.i("SIPINNA", "Cambió $folio: $antes → $estado")
+                    avisar(app, folio, estado)
+                }
             }
         }
         EstadosConocidos.guardar(app, reportes)
