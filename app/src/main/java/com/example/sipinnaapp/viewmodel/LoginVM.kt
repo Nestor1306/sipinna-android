@@ -97,7 +97,16 @@ class LoginVM(
                     val datos = respuesta.body()
                     // El token no viene en el cuerpo: viene en la cookie "session_token"
                     val token = sacarTokenDeCookie(respuesta)
-
+                    // La app es solo para ciudadanos: el personal (alimentador / administrador)
+                    // trabaja desde la web. No se guarda su sesión.
+                    val tipo = datos?.user_type
+                    if (!tipo.isNullOrBlank() && tipo != "citizen") {
+                        _estado.value = _estado.value.copy(
+                            cargando = false,
+                            error = "Esta cuenta es del personal de SIPINNA. Para administrar reportes usa la página web."
+                        )
+                        return@launch
+                    }
                     if (datos != null && token.isNotBlank()) {
                         val nombre = datos.name ?: ""
                         sessionManager.guardarSesion(token = token, nombre = nombre, esAnonimo = false)
