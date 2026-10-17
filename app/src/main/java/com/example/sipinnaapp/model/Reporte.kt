@@ -16,12 +16,15 @@ data class ReporteRequest(
     val sighting_time: String          // "2026-09-11T17:47"
 )
 
-// Paso 1: respuesta de POST /report → {"reporte_id": "..."}
-
-// Si el reporte es anónimo (sin sesión), además llega "edit_token": la llave que
-// permite subir sus fotos y enviarlo (pasos 2 a 4) sin tener cuenta.
+// Paso 1: respuesta de POST /report
+// {"reporte_id": "...", "folio": "RIETI-...", "clave_consulta": "...", "edit_token": "..."}
+// - folio: el que se muestra al usuario (el reporte todavía es DRAFT hasta el paso 4)
+// - clave_consulta: junto con el folio, permite consultar el estado sin cuenta
+// - edit_token: solo si es anónimo; autoriza los pasos 2 a 4 (no se le muestra al usuario)
 data class BorradorCreado(
     @SerializedName("reporte_id") val reporteId: String?,
+    @SerializedName("folio") val folio: String?,
+    @SerializedName("clave_consulta") val claveConsulta: String?,
     @SerializedName("edit_token") val tokenEdicion: String?
 )
 

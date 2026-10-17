@@ -20,6 +20,10 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.text.style.TextAlign
 import com.example.sipinnaapp.ui.theme.*
 import com.example.sipinnaapp.viewmodel.ReporteVM
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 
 @Composable
 fun PantallaReporteEnviado(
@@ -28,6 +32,8 @@ fun PantallaReporteEnviado(
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
+    val portapapeles = LocalClipboardManager.current
+    val contexto = LocalContext.current
 
     Column(
         modifier = modifier
@@ -76,36 +82,41 @@ fun PantallaReporteEnviado(
                 color = GrisTexto,
                 textAlign = TextAlign.Center
             )
-        } else if (estado.enviadoAnonimo) {
-            // Sin cuenta no hay historial donde consultar el reporte después
-            Text(
-                text = "Enviado de forma anónima",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextoPrincipal
-            )
-            Espacio(4.dp)
-            Text(
-                text = "Como no iniciaste sesión, no podrás consultar su estado. Crea una cuenta si quieres darle seguimiento a tus próximos reportes.",
-                fontSize = 12.sp,
-                color = GrisTexto,
-                textAlign = TextAlign.Center
-            )
         } else {
-                if (estado.folioGenerado.startsWith("RIETI")) {
-                    // Folio real: se puede tocar para copiarlo
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Folio: ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextoPrincipal)
-                        FolioCopiable(estado.folioGenerado, tamano = 14.sp)
-                    }
-                } else {
-                    Text(
-                        text = "Folio: ${estado.folioGenerado}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextoPrincipal
-                    )
+            if (estado.enviadoAnonimo) {
+                Text(
+                    text = "Enviado de forma anónima",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoPrincipal
+                )
+                Espacio(4.dp)
+            }
+
+            // Folio: comprobante de que el reporte llegó (se toca para copiarlo)
+            if (estado.folioGenerado.startsWith("RIETI")) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Folio: ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextoPrincipal)
+                    FolioCopiable(estado.folioGenerado, tamano = 14.sp)
                 }
+            } else {
+                Text(
+                    text = "Folio: ${estado.folioGenerado}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoPrincipal
+                )
+            }
+
+            if (estado.enviadoAnonimo) {
+                Espacio(8.dp)
+                Text(
+                    text = "Como no iniciaste sesión, no podrás consultar su estado. Crea una cuenta si quieres darle seguimiento a tus próximos reportes.",
+                    fontSize = 12.sp,
+                    color = GrisTexto,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         // Aviso si alguna foto no se pudo subir (el reporte sí quedó guardado)

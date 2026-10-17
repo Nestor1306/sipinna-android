@@ -330,7 +330,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     // queda en DRAFT: no aparece en el historial ni lo analiza Jev.)
     private fun sinProgresoDeEnvio(e: EstadoReporte): EstadoReporte {
         if (e.reporteIdBorrador.isBlank()) return e
-        return e.copy(reporteIdBorrador = "", tokenEdicion = "", idsImagenes = emptyList(), fotosSubidas = emptySet())
+        return e.copy(
+            reporteIdBorrador = "", tokenEdicion = "", folioBorrador = "", claveConsulta = "",
+            idsImagenes = emptyList(), fotosSubidas = emptySet()
+        )
     }
 
     // --- Envío al servidor ---
@@ -378,7 +381,12 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     if (anonimo && llave.isBlank()) {
                         return@launch falloEnPaso(1, null, "El servidor no regresó la llave del reporte anónimo")
                     }
-                    _estado.value = _estado.value.copy(reporteIdBorrador = reporteId, tokenEdicion = llave)
+                    _estado.value = _estado.value.copy(
+                        reporteIdBorrador = reporteId,
+                        tokenEdicion = llave,
+                        folioBorrador = respuesta.body()?.folio.orEmpty(),
+                        claveConsulta = respuesta.body()?.claveConsulta.orEmpty()
+                    )
                 }
                 val llave: String? = _estado.value.tokenEdicion.ifBlank { null }
 
@@ -436,18 +444,19 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     return@launch falloEnPaso(4, respuesta.code(), respuesta.errorBody()?.string())
                 }
 
-                // El backend no regresa el folio al crear el reporte, así que lo buscamos
-                // en el historial del usuario: es el enviado más reciente.
-                // Un reporte anónimo no tiene historial, así que no hay folio que mostrar.
-                val folio = if (sesion != null) folioMasReciente(sesion) else ""
+                // El folio lo asignó el servidor en el paso 1. Si un servidor viejo no lo
+                // regresó, se busca en el historial (solo funciona con cuenta).
+                val folio = _estado.value.folioBorrador.ifBlank {
+                    if (sesion != null) folioMasReciente(sesion) else ""
+                }
 
                 _estado.value = _estado.value.copy(
                     cargando = false,
                     progresoEnvio = "",
                     enviadoAnonimo = anonimo,
                     folioGenerado = when {
-                        anonimo -> "Anónimo"
                         folio.isNotBlank() -> folio
+                        anonimo -> "Anónimo"
                         else -> "Consúltalo en tu historial"
                     },
                     estadoGenerado = "registrado",   // todo reporte enviado empieza así
