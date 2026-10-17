@@ -211,6 +211,10 @@ fun AppNavegacion(
             "registro" -> PantallaRegistro(
                 vm = registroVM,
                 alIrALogin = { pantallaActual = "login" },
+                alRegistrado = { token, nombre ->
+                    // Al quedar loginExitoso = true, el LaunchedEffect de arriba manda al Home
+                    loginVM.entrarConSesion(token, nombre)
+                },
                 modifier = modifier
             )
             "recuperar" -> PantallaRecuperar(

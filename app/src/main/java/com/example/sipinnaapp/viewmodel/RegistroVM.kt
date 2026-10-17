@@ -9,6 +9,7 @@ import com.example.sipinnaapp.model.UsuarioRegistro
 import com.example.sipinnaapp.network.RetrofitClient
 import com.example.sipinnaapp.network.mensajeDeExcepcion
 import com.example.sipinnaapp.network.mensajeDeRespuesta
+import com.example.sipinnaapp.network.sacarTokenDeCookie
 
 class RegistroVM : ViewModel() {
     companion object {
@@ -117,7 +118,9 @@ class RegistroVM : ViewModel() {
                 if (respuesta.isSuccessful) {
                     _estado.value = _estado.value.copy(
                         cargando = false,
-                        registroExitoso = true
+                        registroExitoso = true,
+                        // El registro ya deja la sesión iniciada (cookie "session_token")
+                        tokenSesion = sacarTokenDeCookie(respuesta)
                     )
                 } else {
                     // Si el backend manda {"error": "mensaje"} se muestra ese mensaje

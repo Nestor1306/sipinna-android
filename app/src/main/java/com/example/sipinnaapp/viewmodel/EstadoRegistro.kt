@@ -16,5 +16,6 @@ data class EstadoRegistro(
 
     val cargando: Boolean = false,   // true mientras espera respuesta del servidor
     val error: String = "",
-    val registroExitoso: Boolean = false
+    val registroExitoso: Boolean = false,
+    val tokenSesion: String = ""     // el servidor inicia sesión al registrarse; "" si no llegó
 )

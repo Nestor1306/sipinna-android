@@ -136,7 +136,6 @@ class LoginVM(
     }
 
     fun entrarAnonimo() {
-
         // Actualizamos la interfaz inmediatamente
         _estado.value =
             EstadoLogin(
@@ -149,6 +148,17 @@ class LoginVM(
             token = "",
             nombre = "Anónimo",
             esAnonimo = true
+        )
+    }
+
+    // Después de registrarse: el servidor ya dio la sesión, se guarda y se entra al Home
+    fun entrarConSesion(token: String, nombre: String) {
+        sessionManager.guardarSesion(token = token, nombre = nombre, esAnonimo = false)
+        _estado.value = EstadoLogin(
+            loginExitoso = true,
+            token = token,
+            nombreUsuario = nombre,
+            esAnonimo = false
         )
     }
 

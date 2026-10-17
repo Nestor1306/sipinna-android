@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 fun PantallaRegistro(
     vm: RegistroVM,
     alIrALogin: () -> Unit = {},
+    alRegistrado: (token: String, nombre: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
@@ -63,15 +64,21 @@ fun PantallaRegistro(
     }
 
     if (estado.registroExitoso) {
+        // Si llegó la sesión, entra directo al Home; si no, va al Login como antes
+        val continuar = {
+            val token = estado.tokenSesion
+            val nombre = "${estado.nombre} ${estado.apellido}".trim()
+            vm.reiniciar()
+            if (token.isNotBlank()) alRegistrado(token, nombre) else alIrALogin()
+        }
         AlertDialog(
-            onDismissRequest = { vm.reiniciar() },
+            onDismissRequest = continuar,
             title = { Text("¡Registro exitoso!") },
             text = { Text("Bienvenido, ${estado.nombre}") },
             confirmButton = {
-                TextButton(onClick = {
-                    vm.reiniciar()
-                    alIrALogin()   // después de registrarse, pasa a iniciar sesión
-                }) { Text("Continuar") }
+                TextButton(onClick = continuar) {
+                    Text(if (estado.tokenSesion.isNotBlank()) "Entrar" else "Continuar")
+                }
             }
         )
     }
