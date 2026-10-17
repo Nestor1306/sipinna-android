@@ -36,7 +36,12 @@ val INTEGRANTES = listOf(
 )
 
 const val MATERIA = "Integración de seguridad informática en redes y sistemas de software"                      // ej. "TC2006B Interconexión de dispositivos"
-const val PROFESOR = "…"                     // ej. "Mtro. Nombre Apellido"
+val PROFESORES = listOf(
+    "Gabriela Azucena Campos García",
+    "Marco Antonio González Galicia",
+    "Roberto Martínez Román",
+    "Jairo Serrato Cortes"
+)                     // ej. "Mtro. Nombre Apellido"
 const val INSTITUCION = "Tecnológico de Monterrey"
 const val PERIODO = "AGO - DIC de 2026"                      // ej. "Agosto–Diciembre 2026"
 
@@ -116,7 +121,7 @@ fun PantallaCreditos(
 
         TarjetaCreditos(titulo = "Proyecto académico") {
             DatoCredito("Materia", MATERIA)
-            DatoCredito("Profesor", PROFESOR)
+            DatoCredito("Profesores", PROFESORES.joinToString("\n"))
             DatoCredito("Institución", INSTITUCION)
             DatoCredito("Periodo", PERIODO)
         }
