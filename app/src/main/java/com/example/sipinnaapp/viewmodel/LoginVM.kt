@@ -91,7 +91,15 @@ class LoginVM(
 
         viewModelScope.launch {
             try {
-                val respuesta = RetrofitClient.api.login(credenciales)
+                var respuesta = RetrofitClient.api.login(credenciales)
+
+                // La app guarda el teléfono como +52XXXXXXXXXX, pero desde la web se puede
+                // registrar solo con los 10 dígitos. Si no entra, se intenta de esa forma.
+                if (respuesta.code() == 401 && !esCorreo) {
+                    respuesta = RetrofitClient.api.login(
+                        LoginRequest(number = digitos, password = password)
+                    )
+                }
 
                 if (respuesta.isSuccessful) {
                     val datos = respuesta.body()
