@@ -10,6 +10,7 @@ import com.example.sipinnaapp.network.RetrofitClient
 import com.example.sipinnaapp.network.mensajeDeExcepcion
 import com.example.sipinnaapp.network.mensajeDeRespuesta
 import com.example.sipinnaapp.network.sacarTokenDeCookie
+import com.example.sipinnaapp.model.generoParaServidor
 
 class RegistroVM : ViewModel() {
     companion object {
@@ -107,7 +108,7 @@ class RegistroVM : ViewModel() {
                 val usuario = UsuarioRegistro(
                     nombre = "$nombre $apellido".trim(),
                     edad = _estado.value.edad.toIntOrNull() ?: 0,
-                    genero = _estado.value.genero,
+                    genero = generoParaServidor(_estado.value.genero),
                     email = email,
                     telefono = formatearTelefono(telefono),
                     password = password

@@ -10,3 +10,17 @@ data class UsuarioRegistro(
     val telefono: String,
     val password: String
 )
+
+
+// Género: lo que guarda el servidor (izquierda) y cómo se ve en la app (derecha).
+// La web y PUT /account usan los valores de la izquierda.
+val GENEROS = listOf(
+    "hombre" to "Masculino",
+    "mujer" to "Femenino",
+    "otro" to "Otro",
+    "prefiero-no-decir" to "Prefiero no mencionarlo"
+)
+
+// "Masculino" → "hombre" (para mandarlo al servidor)
+fun generoParaServidor(etiqueta: String): String =
+    GENEROS.firstOrNull { it.second == etiqueta }?.first ?: ""
