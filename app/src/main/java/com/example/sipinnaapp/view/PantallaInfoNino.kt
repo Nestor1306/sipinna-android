@@ -6,7 +6,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,8 +42,52 @@ fun PantallaInfoNino(
         ) {
             Espacio(24.dp)
 
-            // Pregunta 1: edad (una sola opción)
+            // Pregunta 1: peligro inmediato (va primero: si es una emergencia, el 911 aparece de inmediato)
             EtiquetaPregunta("Pregunta 1")
+            Espacio(4.dp)
+            TituloPregunta("¿Hay peligro inmediato para el niño, niña o adolescente?")
+            Espacio(10.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ChipOpcion(
+                    texto = "Sí",
+                    seleccionado = estado.peligroInmediato == true,
+                    alPresionar = { vm.seleccionarPeligro(true) }
+                )
+                ChipOpcion(
+                    texto = "No",
+                    seleccionado = estado.peligroInmediato == false,
+                    alPresionar = { vm.seleccionarPeligro(false) }
+                )
+            }
+            if (estado.peligroInmediato == true) {
+                Espacio(10.dp)
+                AvisoEmergencia()
+            }
+
+            Espacio(28.dp)
+
+            // Pregunta 2: cuántos niños (una sola opción)
+            EtiquetaPregunta("Pregunta 2")
+            Espacio(4.dp)
+            TituloPregunta("¿Cuántos niños, niñas o adolescentes viste?")
+            Espacio(10.dp)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ReporteVM.OPCIONES_CANTIDAD.forEach { opcion ->
+                    ChipOpcion(
+                        texto = opcion,
+                        seleccionado = estado.cantidadNinos == opcion,
+                        alPresionar = { vm.seleccionarCantidad(opcion) }
+                    )
+                }
+            }
+
+            Espacio(28.dp)
+
+            // Pregunta 3: edad (una sola opción)
+            EtiquetaPregunta("Pregunta 3")
             Espacio(4.dp)
             TituloPregunta("¿Cuál es su edad aproximada?")
             Espacio(10.dp)
@@ -63,12 +106,12 @@ fun PantallaInfoNino(
 
             Espacio(28.dp)
 
-            // Pregunta 2: tipo de trabajo (varias opciones)
-            EtiquetaPregunta("Pregunta 2")
+            // Pregunta 4: tipo de trabajo (varias opciones)
+            EtiquetaPregunta("Pregunta 4")
             Espacio(4.dp)
             TituloPregunta("¿Qué tipo de trabajo está realizando?")
             Text(
-                text = "Puedes seleccionar más de una opción (\"Otro\" va sola)",
+                text = "Puedes seleccionar más de una opción (\"No sé\" va sola)",
                 fontSize = 12.sp,
                 color = GrisTexto
             )
@@ -88,8 +131,8 @@ fun PantallaInfoNino(
 
             Espacio(28.dp)
 
-            // Pregunta 3: condición (una sola opción)
-            EtiquetaPregunta("Pregunta 3")
+            // Pregunta 5: condición (una sola opción)
+            EtiquetaPregunta("Pregunta 5")
             Espacio(4.dp)
             TituloPregunta("¿En qué condición se encuentra?")
             Espacio(10.dp)

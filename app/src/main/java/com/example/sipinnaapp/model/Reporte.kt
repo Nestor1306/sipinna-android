@@ -10,10 +10,11 @@ data class ReporteRequest(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-    val children_quantity: Int,
+    val children_quantity: Int?,       // 1 a 4, 5 = "5 o más", null = "No sé" (no se manda)
     val children_age: String,
     val work_type: String,             // varias opciones separadas por coma
-    val sighting_time: String          // "2026-09-11T17:47"
+    val sighting_time: String,          // "2026-09-11T17:47"
+    val immediate_danger: Boolean = false   // ¿hay peligro inmediato para el niño?
 )
 
 // Paso 1: respuesta de POST /report

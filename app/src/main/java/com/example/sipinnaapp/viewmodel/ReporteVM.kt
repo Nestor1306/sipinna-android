@@ -64,18 +64,27 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         // permitir 0 fotos, basta con poner esto en false.
         const val FOTO_OBLIGATORIA = false
         const val MIN_PALABRAS = 10          // mínimo de palabras en la descripción
-        const val OPCION_OTRO = "Otro"       // en tipo de trabajo, "Otro" no se combina con las demás
+        const val OPCION_NO_SE = "No sé"     // en tipo de trabajo, "No sé" no se combina con las demás
 
         const val LADO_MAXIMO_FOTO = 1600    // pixeles; las fotos se reducen antes de subirlas
 
-        // Opciones de la pantalla "Información del niño" (igual que en Figma)
+        // Opciones de "Información del NNA" (las mismas que la web de SIPINNA)
+        val OPCIONES_CANTIDAD = listOf("1", "2", "3", "4", "5 o más", "No sé")
         val OPCIONES_EDAD = listOf(
-            "Menos de 5 años", "5 - 7 años", "8 - 10 años", "11 - 13 años", "14 - 17 años"
+            "0 a 5 años", "6 a 11 años", "12 a 14 años", "15 a 17 años", "No sé"
         )
         val OPCIONES_TRABAJO = listOf(
-            "Vendedor ambulante", "Limpieza de calles", "Cargador / Cargadora",
-            "Recolección de basura", "Agricultura / Campo", "Mendicidad", "Construcción", "Otro"
+            "Venta ambulante", "Limpieza de parabrisas", "Mendicidad", "Carga y descarga",
+            "Trabajo en comercio", "Campo", "Construcción", "Trabajo doméstico",
+            "Recolección de residuos", "Otra actividad", "No sé"
         )
+
+        // "5 o más" → 5, "No sé" → null (el backend lo entiende como desconocido)
+        fun cantidadParaServidor(opcion: String): Int? = when (opcion) {
+            "5 o más" -> 5
+            "No sé", "" -> null
+            else -> opcion.toIntOrNull()
+        }
         // Cuenta palabras separadas por espacios ("  hola   mundo " = 2)
         fun contarPalabras(texto: String): Int =
             texto.trim().split(Regex("\\s+")).count { it.isNotBlank() }
@@ -86,6 +95,8 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             1 -> if (e.direccion.isBlank() && e.latitud == 0.0) "Indica la ubicación del reporte" else ""
             2 -> if (FOTO_OBLIGATORIA && e.fotos.isEmpty()) "Agrega al menos una foto del lugar" else ""
             3 -> when {
+                e.peligroInmediato == null -> "Indica si hay peligro inmediato"
+                e.cantidadNinos.isEmpty() -> "Indica cuántos niños viste"
                 e.edadNino.isEmpty() -> "Selecciona la edad aproximada"
                 e.tiposTrabajo.isEmpty() -> "Selecciona al menos un tipo de trabajo"
                 e.condicion.isEmpty() -> "Selecciona en qué condición se encuentra"
@@ -237,15 +248,22 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     fun seleccionarEdad(valor: String) {
         _estado.value = _estado.value.copy(edadNino = valor)
     }
+    fun seleccionarCantidad(valor: String) {
+        _estado.value = _estado.value.copy(cantidadNinos = valor)
+    }
+
+    fun seleccionarPeligro(valor: Boolean) {
+        _estado.value = _estado.value.copy(peligroInmediato = valor)
+    }
 
     // Se pueden elegir varios: si ya estaba, se quita; si no, se agrega
-    // "Otro" va sola: al elegirla se quitan las demás, y al elegir otra se quita "Otro"
+    // "No sé" va sola: al elegirla se quitan las demás, y al elegir otra se quita "No sé"
     fun alternarTipoTrabajo(valor: String) {
         val actuales = _estado.value.tiposTrabajo
         val nuevos = when {
             valor in actuales -> actuales - valor
-            valor == OPCION_OTRO -> setOf(OPCION_OTRO)
-            else -> actuales - OPCION_OTRO + valor
+            valor == OPCION_NO_SE -> setOf(OPCION_NO_SE)
+            else -> actuales - OPCION_NO_SE + valor
         }
         _estado.value = _estado.value.copy(tiposTrabajo = nuevos)
     }
@@ -584,11 +602,12 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             description = partes.joinToString("\n"),
             latitude = e.latitud,
             longitude = e.longitud,
-            children_quantity = 1,
+            children_quantity = cantidadParaServidor(e.cantidadNinos),
             children_age = e.edadNino,
             work_type = e.tiposTrabajo.joinToString(", "),
             sighting_time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
-                .format(Date(e.fechaAvistamiento ?: System.currentTimeMillis()))
+                .format(Date(e.fechaAvistamiento ?: System.currentTimeMillis())),
+            immediate_danger = e.peligroInmediato == true
         )
     }
 

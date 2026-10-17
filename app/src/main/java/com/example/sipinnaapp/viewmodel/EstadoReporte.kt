@@ -18,6 +18,8 @@ data class EstadoReporte(
 
     // Paso 3: Información del niño
     val edadNino: String = "",
+    val cantidadNinos: String = "",             // "1"…"4", "5 o más", "No sé" ("" = sin elegir)
+    val peligroInmediato: Boolean? = null,      // null = todavía no contesta
     val tiposTrabajo: Set<String> = emptySet(),   // se pueden elegir varios
     val condicion: String = "",
 
