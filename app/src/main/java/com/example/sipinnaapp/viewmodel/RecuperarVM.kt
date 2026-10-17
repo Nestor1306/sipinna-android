@@ -40,31 +40,45 @@ class RecuperarVM : ViewModel() {
     fun actualizarNueva(valor: String) { _estado.value = _estado.value.copy(nueva = valor) }
     fun actualizarConfirmar(valor: String) { _estado.value = _estado.value.copy(confirmar = valor) }
 
-    // Paso 1: manda el código al correo. También sirve para "Reenviar código".
-    fun pedirCodigo() {
-        val correo = _estado.value.correo.trim()
-        if (!correo.contains("@")) {
+    // Lo que escribió (correo o teléfono) → (email, number) como los pide el backend.
+    // Si no es válido, deja el error en pantalla y regresa null.
+    private fun contacto(): Pair<String?, String?>? {
+        val texto = _estado.value.correo.trim()
+        if (texto.contains("@")) {
+            if (!RegistroVM.correoValido(texto)) {
+                _estado.value = _estado.value.copy(error = "El correo no es válido")
+                return null
+            }
+            return texto to null
+        }
+        // Teléfono: 10 dígitos (si escribió +52 adelante, se quita)
+        val digitos = texto.filter { it.isDigit() }.let {
+            if (it.length == 12 && it.startsWith("52")) it.drop(2) else it
+        }
+        if (!RegistroVM.telefonoValido(digitos)) {
             _estado.value = _estado.value.copy(
-                error = "Escribe el correo de tu cuenta. Por ahora no se puede recuperar con teléfono."
+                error = "Escribe tu correo o tu teléfono de ${RegistroVM.DIGITOS_TELEFONO} dígitos"
             )
-            return
+            return null
         }
-        if (!RegistroVM.correoValido(correo)) {
-            _estado.value = _estado.value.copy(error = "El correo no es válido")
-            return
-        }
+        return null to "+52$digitos"
+    }
+
+    // Paso 1: manda el código al correo o por SMS. También sirve para "Reenviar código".
+    fun pedirCodigo() {
+        val (email, telefono) = contacto() ?: return
 
         _estado.value = _estado.value.copy(cargando = true)
         viewModelScope.launch {
             try {
-                val respuesta = RetrofitClient.api.pedirCodigo(SolicitudCodigo(correo))
+                val respuesta = RetrofitClient.api.pedirCodigo(SolicitudCodigo(email = email, number = telefono))
                 _estado.value = if (respuesta.isSuccessful) {
-                    // El servidor responde lo mismo exista o no la cuenta (para no revelar correos)
+                    // El servidor responde lo mismo exista o no la cuenta (para no revelar datos)
                     _estado.value.copy(
                         cargando = false,
                         codigoEnviado = true,
                         aviso = respuesta.body()?.message
-                            ?: "Si el correo está registrado, te enviamos un código de 6 dígitos."
+                            ?: "Si la cuenta existe, te enviamos un código de 6 dígitos."
                     )
                 } else {
                     _estado.value.copy(
@@ -91,12 +105,13 @@ class RecuperarVM : ViewModel() {
             _estado.value = e.copy(error = error)
             return
         }
+        val (email, telefono) = contacto() ?: return
 
         _estado.value = e.copy(cargando = true)
         viewModelScope.launch {
             try {
                 val respuesta = RetrofitClient.api.cambiarContrasena(
-                    CambioContrasena(email = e.correo.trim(), code = e.codigo, new_password = e.nueva)
+                    CambioContrasena(email = email, number = telefono, code = e.codigo, new_password = e.nueva)
                 )
                 _estado.value = if (respuesta.isSuccessful) {
                     _estado.value.copy(cargando = false, listo = true)

@@ -60,23 +60,19 @@ fun PantallaRecuperar(
         if (!estado.codigoEnviado) {
             // --- Paso 1: correo ---
             Text(
-                "Escribe el correo de tu cuenta y te enviaremos un código de ${RecuperarVM.DIGITOS_CODIGO} dígitos.",
+                "Escribe el correo o el teléfono de tu cuenta y te enviaremos un código de ${RecuperarVM.DIGITOS_CODIGO} dígitos.",
                 fontSize = 14.sp, color = GrisTexto
             )
             Espacio(24.dp)
             CampoConIcono(
-                etiqueta = "Correo electrónico",
+                etiqueta = "Correo o teléfono",
                 valor = estado.correo,
                 alCambiar = { vm.actualizarCorreo(it) },
                 icono = Icons.Default.Email,
-                ayuda = "tucorreo@ejemplo.com",
+                ayuda = "tucorreo@ejemplo.com o 5512345678",
                 teclado = KeyboardType.Email
             )
-            Espacio(8.dp)
-            Text(
-                "Si te registraste solo con teléfono, por ahora no es posible recuperar la contraseña.",
-                fontSize = 12.sp, color = GrisTexto
-            )
+
             Espacio(28.dp)
             if (estado.cargando) {
                 CircularProgressIndicator(color = Teal)
@@ -87,7 +83,7 @@ fun PantallaRecuperar(
             // --- Paso 2: código + contraseña nueva ---
             Text(estado.aviso, fontSize = 14.sp, color = GrisTexto)
             Espacio(4.dp)
-            Text("Revisa también tu carpeta de spam.", fontSize = 12.sp, color = GrisTexto)
+            Text("Revisa tu correo (también spam) o tus mensajes SMS.", fontSize = 12.sp, color = GrisTexto)
             Espacio(24.dp)
 
             CampoConIcono(
@@ -130,7 +126,7 @@ fun PantallaRecuperar(
                 Row {
                     TextButton(onClick = { vm.pedirCodigo() }) { Text("Reenviar código", color = Teal) }
                     Spacer(Modifier.weight(1f))
-                    TextButton(onClick = { vm.cambiarCorreo() }) { Text("Usar otro correo", color = GrisTexto) }
+                    TextButton(onClick = { vm.cambiarCorreo() }) { Text("Usar otro dato", color = GrisTexto) }
                 }
             }
         }

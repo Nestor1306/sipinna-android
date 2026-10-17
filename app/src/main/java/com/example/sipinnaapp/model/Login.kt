@@ -17,12 +17,17 @@ data class LoginResponse(
     val zone_name: String?
 )
 
-// POST /auth/password/forgot → manda un código de 6 dígitos al correo
-data class SolicitudCodigo(val email: String)
+// POST /auth/password/forgot → manda un código de 6 dígitos al correo o por SMS.
+// Va el correo O el teléfono, nunca los dos: el que queda en null no se manda.
+data class SolicitudCodigo(
+    val email: String? = null,
+    val number: String? = null
+)
 
 // POST /auth/password/reset → cambia la contraseña con ese código
 data class CambioContrasena(
-    val email: String,
+    val email: String? = null,
+    val number: String? = null,
     val code: String,
     val new_password: String
 )

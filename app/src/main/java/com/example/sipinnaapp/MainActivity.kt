@@ -189,7 +189,7 @@ fun AppNavegacion(
                 alEntrarAnonimo = { pantallaActual = "avisoAnonimo" },
                 alOlvideContrasena = {
                     // Si ya había escrito su correo en el Login, se pasa para no escribirlo otra vez
-                    recuperarVM.reiniciar(estadoLogin.email.trim().takeIf { it.contains("@") } ?: "")
+                    recuperarVM.reiniciar(estadoLogin.email.trim())
                     pantallaActual = "recuperar"
                 },
                 alVerCreditos = {
