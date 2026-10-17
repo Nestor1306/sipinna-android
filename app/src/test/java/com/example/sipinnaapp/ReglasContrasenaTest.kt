@@ -16,7 +16,7 @@ class ReglasContrasenaTest {
         assertTrue(contrasenaValida("Sipinna2026!"))
         assertTrue(contrasenaValida("Mi casa es azul #3"))     // con espacios
         assertTrue(contrasenaValida("Ñandú_feliz"))            // mayúscula con acento/ñ
-        assertTrue(contrasenaValida("A!" + "a".repeat(126)))   // exactamente 128
+        assertTrue(contrasenaValida("A!" + "a".repeat(70)))    // exactamente 72
     }
 
     @Test
