@@ -23,9 +23,13 @@ fun mensajeDeExcepcion(e: Exception): String {
 fun mensajeDeRespuesta(codigo: Int, cuerpo: String?): String {
     Log.e("SIPINNA", "El servidor respondió $codigo: $cuerpo")
 
-    // El backend responde {"error": "mensaje"}; si viene, usamos ese mensaje
+    // El backend responde casi siempre {"error": "..."}, pero algunas rutas usan
+    // "message" y el registro usa "erroruwu". Se toma el primero que venga.
     val mensajeServidor = try {
-        JSONObject(cuerpo ?: "").getString("error")
+        val json = JSONObject(cuerpo ?: "")
+        listOf("error", "message", "erroruwu")
+            .firstNotNullOfOrNull { clave -> json.optString(clave).takeIf { it.isNotBlank() } }
+            ?: ""
     } catch (_: Exception) {
         ""
     }
@@ -38,11 +42,12 @@ fun mensajeDeRespuesta(codigo: Int, cuerpo: String?): String {
     }
 
     return when (codigo) {
-        400 -> "Algunos datos no son válidos. Revísalos e inténtalo de nuevo."
-        401 -> "Tu sesión expiró. Cierra sesión y vuelve a entrar."
+        401 -> "Tu sesión expiró. Vuelve a iniciar sesión."
         403 -> "No tienes permiso para hacer esto."
         404 -> "No se encontró lo que buscabas."
+        409 -> "Ya existe una cuenta o un registro con esos datos."
         413 -> "El archivo es demasiado grande."
+        429 -> "Espera un momento antes de intentarlo de nuevo."
         else -> if (codigo >= 500) {
             "El servidor tuvo un problema. Inténtalo más tarde."
         } else {
