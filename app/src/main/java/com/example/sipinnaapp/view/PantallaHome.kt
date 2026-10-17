@@ -71,7 +71,7 @@ fun PantallaHome(
                     (it.description ?: "").contains(busqueda, ignoreCase = true) ||
                     (it.folio ?: "").contains(busqueda, ignoreCase = true)
         }
-        .filter { filtroEstado == null || it.report_state == filtroEstado }
+        .filter { filtroEstado == null || estadoPublico(it.report_state) == filtroEstado }
         .let { if (masAntiguosPrimero) it.reversed() else it }
 
     Box(

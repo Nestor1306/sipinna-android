@@ -44,6 +44,7 @@ import com.example.sipinnaapp.data.BuscadorLugares
 import com.example.sipinnaapp.data.LugarSugerido
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import com.example.sipinnaapp.view.estadoPublico
 
 // Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
 class ReporteVM(application: Application) : AndroidViewModel(application) {
@@ -666,7 +667,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     // por ese número para dejar arriba los más recientes.
                     // Los borradores (DRAFT) son envíos que no se terminaron: no se muestran.
                     val historial = reportes
-                        .filter { it.report_state != "DRAFT" }
+                        .filter { estadoPublico(it.report_state) != "borrador" }   // DRAFT o "borrador"
                         .sortedByDescending { consecutivoDeFolio(it.folio) }
 
                     // Copia en el teléfono para poder verlo sin internet

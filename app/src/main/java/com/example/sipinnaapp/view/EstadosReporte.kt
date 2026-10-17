@@ -4,10 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.sipinnaapp.ui.theme.AmarilloProgreso
 import com.example.sipinnaapp.ui.theme.AzulInstitucional
 import com.example.sipinnaapp.ui.theme.GrisIcono
-import com.example.sipinnaapp.ui.theme.Magenta
 import com.example.sipinnaapp.ui.theme.Morado
-import com.example.sipinnaapp.ui.theme.RojoNoApto
-import com.example.sipinnaapp.ui.theme.TextoSecundario
 import com.example.sipinnaapp.ui.theme.VerdeConfirmado
 
 // Los colores de cada estado son los mismos que usa la web (dashboard de www.sipinna.com)
@@ -19,29 +16,48 @@ data class InfoEstado(
     val detalle: String
 )
 
-// Los estados del reporte, en el orden en que avanza un reporte.
-// La primera parte es el valor que guarda la base de datos; la segunda, cómo se ve en la app.
-// (También es la lista de opciones del filtro del Home.)
+// Estados que el backend le muestra al ciudadano (ya traducidos), en el orden en que
+// avanza un reporte. La primera parte es el valor que llega de la API; la segunda, cómo
+// se ve en la app. También es la lista de opciones del filtro del Home.
 val ESTADOS_REPORTE = listOf(
-    "registrado" to "Registrado",
+    "recibido" to "Recibido",
     "en_revision" to "En revisión",
-    "en_seguimiento" to "En seguimiento",
     "canalizado" to "Canalizado",
+    "en_atencion" to "En atención",
     "concluido" to "Concluido",
-    "archivado" to "Archivado",
-    "cancelado" to "Cancelado",
-    "reincidente" to "Reincidente",
     "pendiente_envio" to "Pendiente de envío"   // solo existe en el teléfono (sin internet)
 )
 
-// Convierte el estado que viene de la base de datos (columna "estado") en su texto y color
+// El backend ya manda el estado público, pero los datos guardados en el teléfono
+// (historial sin conexión, estados conocidos de las notificaciones) pueden traer los
+// nombres internos de antes. Esta función los traduce igual que el backend.
+fun estadoPublico(estado: String?): String = when (estado) {
+    null, "" -> "recibido"
+    "DRAFT", "borrador" -> "borrador"
+    "pendiente_envio" -> "pendiente_envio"
+    "registrado", "recibido" -> "recibido"
+    "canalizado" -> "canalizado"
+    "en_atencion", "en_seguimiento" -> "en_atencion"
+    "concluido", "archivado", "cancelado" -> "concluido"
+    // en_revision, validado, caso_confirmado, reincidente, duplicado y cualquier estado nuevo
+    else -> "en_revision"
+}
+
+// Convierte el estado (nuevo o viejo) en su texto y color
 fun infoDeEstado(estado: String?): InfoEstado {
-    return when (estado) {
+    return when (estadoPublico(estado)) {
         // Se guardó en el teléfono sin internet (no viene de la base de datos)
         "pendiente_envio" -> InfoEstado(
             titulo = "Pendiente de envío",
             color = GrisIcono,
             detalle = "Sin conexión. Se enviará automáticamente cuando haya internet."
+        )
+
+        // --- Pendiente (ámbar) ---
+        "recibido" -> InfoEstado(
+            titulo = "Recibido",
+            color = AmarilloProgreso,
+            detalle = "Recibimos tu reporte. Pronto empezaremos a revisarlo."
         )
 
         // --- En proceso (morado) ---
@@ -50,10 +66,10 @@ fun infoDeEstado(estado: String?): InfoEstado {
             color = Morado,
             detalle = "Estamos verificando la información de tu reporte."
         )
-        "en_seguimiento" -> InfoEstado(
-            titulo = "En seguimiento",
+        "en_atencion" -> InfoEstado(
+            titulo = "En atención",
             color = Morado,
-            detalle = "Tu reporte fue validado y se le da seguimiento."
+            detalle = "Tu reporte está siendo atendido."
         )
 
         // --- Turnado a otra autoridad (azul) ---
@@ -67,31 +83,14 @@ fun infoDeEstado(estado: String?): InfoEstado {
         "concluido" -> InfoEstado(
             titulo = "Concluido",
             color = VerdeConfirmado,
-            detalle = "La atención de tu reporte terminó."
-        )
-        "reincidente" -> InfoEstado(
-            titulo = "Reincidente",
-            color = Magenta,
-            detalle = "Ya había reportes de este caso; se suma a su seguimiento."
+            detalle = "La atención de este reporte terminó."
         )
 
-        // --- Cerrados sin atención (gris y rojo) ---
-        "archivado" -> InfoEstado(
-            titulo = "Archivado",
-            color = TextoSecundario,
-            detalle = "No fue posible validar la información proporcionada."
-        )
-        "cancelado" -> InfoEstado(
-            titulo = "Cancelado",
-            color = RojoNoApto,
-            detalle = "Este reporte fue cancelado."
-        )
-
-        // "registrado" (así empieza todo reporte) o cualquier estado nuevo. Pendiente (ámbar).
+        // "borrador" (no debería mostrarse: se filtra antes)
         else -> InfoEstado(
-            titulo = "Registrado",
-            color = AmarilloProgreso,
-            detalle = "Recibimos tu reporte. Pronto empezaremos a revisarlo."
+            titulo = "Borrador",
+            color = GrisIcono,
+            detalle = "Este reporte no se terminó de enviar."
         )
     }
 }
