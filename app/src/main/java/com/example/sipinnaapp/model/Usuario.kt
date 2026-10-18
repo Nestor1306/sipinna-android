@@ -1,5 +1,7 @@
 package com.example.sipinnaapp.model
 
+import com.google.gson.annotations.SerializedName
+
 // Molde de los datos que el usuario llena para registrarse
 // Es igual a como el backend espera recibirlos (POST /user)
 data class UsuarioRegistro(
@@ -24,3 +26,26 @@ val GENEROS = listOf(
 // "Masculino" → "hombre" (para mandarlo al servidor)
 fun generoParaServidor(etiqueta: String): String =
     GENEROS.firstOrNull { it.second == etiqueta }?.first ?: ""
+
+
+// GET /account y respuesta de PUT /account
+// {"nombre": "...", "email": "..." o null, "telefono": "+52..." o null, "edad": 30,
+//  "genero": "mujer", "user_type": "citizen", "zone_name": "", "has_password": true}
+data class PerfilCuenta(
+    val nombre: String?,
+    val email: String?,
+    val telefono: String?,
+    val edad: Int?,
+    val genero: String?,
+    @SerializedName("has_password") val tienePassword: Boolean?
+)
+
+// PUT /account: lo que se manda al guardar. Lo que va en null no se manda.
+// El teléfono va con +52 (el servidor pide formato internacional).
+data class PerfilActualizar(
+    val nombre: String,
+    val email: String?,
+    val telefono: String?,
+    val edad: Int,
+    val genero: String?
+)

@@ -45,6 +45,8 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.sipinnaapp.worker.RevisarEstadosWorker
+import com.example.sipinnaapp.viewmodel.PerfilVM
+import com.example.sipinnaapp.view.PantallaEditarPerfil
 
 // Cuánto tarda el cambio suave entre pantallas (en milisegundos)
 const val DURACION_TRANSICION = 400
@@ -58,6 +60,7 @@ class MainActivity : ComponentActivity() {
     private val reporteVM: ReporteVM by viewModels()
 
     private val recuperarVM: RecuperarVM by viewModels()
+    private val perfilVM: PerfilVM by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,6 +80,7 @@ class MainActivity : ComponentActivity() {
                         loginVM = loginVM,
                         reporteVM = reporteVM,
                         recuperarVM = recuperarVM,
+                        perfilVM = perfilVM,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -93,10 +97,12 @@ fun AppNavegacion(
     loginVM: LoginVM,
     reporteVM: ReporteVM,
     recuperarVM: RecuperarVM,
+    perfilVM: PerfilVM,
     modifier: Modifier = Modifier
 ) {
     val estadoLogin by loginVM.estado.collectAsState()
     val estadoReporte by reporteVM.estado.collectAsState()
+    val estadoPerfil by perfilVM.estado.collectAsState()
 
     // Guardamos en qué pantalla estamos.
     // Si ya había una sesión guardada, empezamos directo en el Home.
@@ -146,11 +152,12 @@ fun AppNavegacion(
     // En el Home y el Login no se activa, así que ahí sí cierra la app (lo normal en Android).
     // El reporte maneja su propio "atrás" en FlujoReporte; el aviso anónimo también tiene el suyo.
     BackHandler(
-        enabled = pantallaActual in listOf("detalle", "perfil", "registro", "recuperar", "creditos")
+        enabled = pantallaActual in listOf("detalle", "perfil", "editarPerfil", "registro", "recuperar", "creditos")
     ) {
         pantallaActual = when (pantallaActual) {
             "registro", "recuperar" -> "login"
             "creditos" -> origenCreditos
+            "editarPerfil" -> "perfil"
             else -> "home"
         }
     }
@@ -160,6 +167,16 @@ fun AppNavegacion(
         if (estadoReporte.sesionVencida) {
             loginVM.sesionExpirada()
             reporteVM.limpiarTodo()   // también reinicia sesionVencida
+            pantallaActual = "login"
+        }
+    }
+
+    // Lo mismo si la sesión caducó estando en "Mis datos"
+    LaunchedEffect(estadoPerfil.sesionVencida) {
+        if (estadoPerfil.sesionVencida) {
+            loginVM.sesionExpirada()
+            reporteVM.limpiarTodo()
+            perfilVM.reiniciar()
             pantallaActual = "login"
         }
     }
@@ -300,7 +317,27 @@ fun AppNavegacion(
                         alFallar = alFallar
                     )
                 },
-                modifier = modifier
+                modifier = modifier,
+                alEditarDatos = if (estadoLogin.esAnonimo) null else {
+                    {
+                        perfilVM.cargar(estadoLogin.token)
+                        pantallaActual = "editarPerfil"
+                    }
+                }
+            )
+            "editarPerfil" -> PantallaEditarPerfil(
+                datos = estadoPerfil.datos,
+                alCambiar = { perfilVM.cambiar(it) },
+                alGuardar = {
+                    perfilVM.guardar(estadoLogin.token) { nombre -> loginVM.actualizarNombre(nombre) }
+                },
+                alRegresar = { pantallaActual = "perfil" },
+                modifier = modifier,
+                cargando = estadoPerfil.cargando,
+                guardando = estadoPerfil.guardando,
+                error = estadoPerfil.error,
+                guardado = estadoPerfil.guardado,
+                puedeCambiarCorreo = estadoPerfil.puedeCambiarCorreo
             )
             "reporte" -> FlujoReporte(
                 vm = reporteVM,

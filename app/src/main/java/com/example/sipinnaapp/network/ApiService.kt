@@ -25,6 +25,8 @@ import com.example.sipinnaapp.model.RespuestaMensaje
 import com.example.sipinnaapp.model.SolicitudCodigo
 import com.example.sipinnaapp.model.ConfirmacionEliminar
 import retrofit2.http.HTTP
+import com.example.sipinnaapp.model.PerfilActualizar
+import com.example.sipinnaapp.model.PerfilCuenta
 
 // Define los endpoints del backend Go (rama main del equipo)
 // Cada función aquí = un endpoint de la API.
@@ -66,6 +68,19 @@ interface ApiService {
         @Header("Cookie") sesion: String,
         @Body confirmacion: ConfirmacionEliminar
     ): Response<Any>
+
+    // GET /account → datos de la cuenta de quien tiene la sesión
+    @GET("account")
+    suspend fun miCuenta(
+        @Header("Cookie") sesion: String
+    ): Response<PerfilCuenta>
+
+    // PUT /account → guarda los cambios y regresa los datos ya guardados
+    @PUT("account")
+    suspend fun actualizarCuenta(
+        @Header("Cookie") sesion: String,
+        @Body datos: PerfilActualizar
+    ): Response<PerfilCuenta>
 
     // ---- Envío de un reporte: 4 pasos (ver ReporteVM.enviar) ----
 

@@ -179,6 +179,13 @@ class LoginVM(
         )
     }
 
+    // Después de editar "Mis datos": el nombre nuevo se ve en el Perfil y queda guardado
+    fun actualizarNombre(nombre: String) {
+        val token = _estado.value.token
+        sessionManager.guardarSesion(token = token, nombre = nombre, esAnonimo = false)
+        _estado.value = _estado.value.copy(nombreUsuario = nombre)
+    }
+
     fun cerrarSesion() {
 
         // Limpia inmediatamente la interfaz
