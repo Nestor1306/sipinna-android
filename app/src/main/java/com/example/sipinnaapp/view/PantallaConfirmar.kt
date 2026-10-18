@@ -135,7 +135,8 @@ fun PantallaConfirmar(
                 }
                 Espacio(10.dp)
                 Text(
-                    text = estado.direccion.ifBlank { "%.5f, %.5f".format(estado.latitud, estado.longitud) },
+                    text = estado.direccion.ifBlank { "%.5f, %.5f".format(estado.latitud, estado.longitud) } +
+                            (if (estado.referencia.isNotBlank()) "\nReferencia: ${estado.referencia.trim()}" else ""),
                     fontSize = 12.sp,
                     color = TextoPrincipal
                 )
@@ -213,6 +214,12 @@ fun PantallaConfirmar(
                 EtiquetaGris("Condición")
                 Espacio(4.dp)
                 ChipResumen(estado.condicion)
+                if (estado.riesgo.isNotBlank()) {
+                    Espacio(10.dp)
+                    EtiquetaGris("Situación de riesgo")
+                    Espacio(4.dp)
+                    ChipResumen(OPCIONES_RIESGO.firstOrNull { it.first == estado.riesgo }?.second ?: estado.riesgo)
+                }
             }
 
             Espacio(16.dp)

@@ -10,6 +10,7 @@ data class EstadoReporte(
     val latitud: Double = 0.0,
     val longitud: Double = 0.0,
     val direccion: String = "",
+    val referencia: String = "",                // calle o punto de referencia (opcional)               // "si", "no", "no_se" ("" = sin contestar; es opcional)
     val buscandoUbicacion: Boolean = false,
     val sugerencias: List<LugarSugerido> = emptyList(),   // resultados del buscador de lugares
 
@@ -22,6 +23,7 @@ data class EstadoReporte(
     val peligroInmediato: Boolean? = null,      // null = todavía no contesta
     val tiposTrabajo: Set<String> = emptySet(),   // se pueden elegir varios
     val condicion: String = "",
+    val riesgo: String = "",                    // "si", "no", "no_se" ("" = sin contestar; es opcional)
 
     // Paso 4: Descripción
     val descripcion: String = "",

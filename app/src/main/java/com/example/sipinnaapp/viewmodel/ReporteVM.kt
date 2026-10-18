@@ -58,6 +58,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
         const val TOTAL_PASOS = 5
         const val MAX_FOTOS = 2              // el diseño permite hasta 2 fotos
+        const val MAX_REFERENCIA = 300       // calle o punto de referencia
 
         // Por ahora el backend solo acepta enviar (PUT /report/{id}/submit) reportes
         // con al menos una foto subida, así que la pedimos. Si el backend cambia para
@@ -179,6 +180,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         _estado.value = _estado.value.copy(direccion = valor)
     }
 
+    fun actualizarReferencia(valor: String) {
+        _estado.value = _estado.value.copy(referencia = valor.take(MAX_REFERENCIA))
+    }
+
     fun actualizarCoordenadas(lat: Double, lng: Double) {
         _estado.value = _estado.value.copy(latitud = lat, longitud = lng, buscandoUbicacion = false)
     }
@@ -268,6 +273,11 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         _estado.value = _estado.value.copy(tiposTrabajo = nuevos)
     }
 
+    // Si se toca la opción ya elegida, se quita (la pregunta es opcional)
+    fun seleccionarRiesgo(valor: String) {
+        val actual = _estado.value.riesgo
+        _estado.value = _estado.value.copy(riesgo = if (actual == valor) "" else valor)
+    }
 
     fun seleccionarCondicion(valor: String) {
         _estado.value = _estado.value.copy(condicion = valor)
@@ -608,7 +618,9 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             work_type = e.tiposTrabajo.joinToString(", "),
             sighting_time = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
                 .format(Date(e.fechaAvistamiento ?: System.currentTimeMillis())),
-            immediate_danger = e.peligroInmediato == true
+            immediate_danger = e.peligroInmediato == true,
+            risk = e.riesgo.ifBlank { null },
+            reference = e.referencia.trim().ifBlank { null }
         )
     }
 

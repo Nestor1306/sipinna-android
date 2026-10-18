@@ -385,7 +385,11 @@ fun PantallaLocacion(
             }
         }
 
-        Espacio(20.dp)
+        Espacio(12.dp)
+
+        CampoReferencia(valor = estado.referencia, alCambiar = { vm.actualizarReferencia(it) })
+
+        Espacio(16.dp)
 
         BotonPrincipal(
             texto = if (estado.editandoDesdeConfirmar) "Guardar cambios" else "Confirmar",

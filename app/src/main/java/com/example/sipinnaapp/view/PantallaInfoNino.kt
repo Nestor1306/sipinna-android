@@ -149,6 +149,12 @@ fun PantallaInfoNino(
                 }
             }
 
+
+            Espacio(28.dp)
+
+            // Pregunta 6: situación de riesgo (opcional)
+            PreguntaRiesgo(numero = 6, seleccion = estado.riesgo, alElegir = { vm.seleccionarRiesgo(it) })
+
             Espacio(24.dp)
         }
 
