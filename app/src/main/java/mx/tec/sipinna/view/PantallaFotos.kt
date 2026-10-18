@@ -24,6 +24,16 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import mx.tec.sipinna.ui.theme.*
 import mx.tec.sipinna.viewmodel.ReporteVM
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import java.io.File
 
 @Composable
 fun PantallaFotos(
@@ -33,11 +43,63 @@ fun PantallaFotos(
 ) {
     val estado by vm.estado.collectAsState()
 
+    val contexto = LocalContext.current
+
+    // Diálogo "¿Cámara o galería?"
+    var preguntarOrigen by remember { mutableStateOf(false) }
+
     // Abre la galería del teléfono y permite elegir varias fotos
     val elegirFotos = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(ReporteVM.MAX_FOTOS)
     ) { uris: List<Uri> ->
         if (uris.isNotEmpty()) vm.agregarFotos(uris.map { it.toString() })
+    }
+
+    // Abre la cámara. La foto se guarda en el archivo que le pasamos (fotoPendiente).
+    // Se guarda con rememberSaveable por si Android cierra la app mientras la cámara está abierta.
+    var fotoPendiente by rememberSaveable { mutableStateOf<String?>(null) }
+    val tomarFoto = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { tomada: Boolean ->
+        val uri = fotoPendiente
+        if (tomada && uri != null) {
+            vm.agregarFotos(listOf(uri))
+        } else if (uri != null) {
+            borrarFotoDeCamara(contexto, Uri.parse(uri))   // se canceló: el archivo quedó vacío
+        }
+        fotoPendiente = null
+    }
+
+    if (preguntarOrigen) {
+        AlertDialog(
+            onDismissRequest = { preguntarOrigen = false },
+            title = { Text("Agregar foto") },
+            text = {
+                Column {
+                    OpcionOrigenFoto(Icons.Default.PhotoCamera, "Tomar foto") {
+                        preguntarOrigen = false
+                        val uri = nuevoArchivoParaFoto(contexto)
+                        fotoPendiente = uri.toString()
+                        try {
+                            tomarFoto.launch(uri)
+                        } catch (e: ActivityNotFoundException) {
+                            fotoPendiente = null
+                            Toast.makeText(contexto, "No se encontró una app de cámara", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    OpcionOrigenFoto(Icons.Default.PhotoLibrary, "Elegir de la galería") {
+                        preguntarOrigen = false
+                        elegirFotos.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { preguntarOrigen = false }) { Text("Cancelar", color = Teal) }
+            }
+        )
     }
 
     Column(
@@ -64,11 +126,7 @@ fun PantallaFotos(
             }
             if (estado.fotos.size < ReporteVM.MAX_FOTOS) {
                 CuadroAgregarFoto(
-                    alPresionar = {
-                        elegirFotos.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
+                    alPresionar = { preguntarOrigen = true },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -141,4 +199,34 @@ fun CuadroAgregarFoto(alPresionar: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier.size(48.dp)
         )
     }
+}
+
+
+// Una opción del diálogo "Agregar foto" (ícono + texto, toda la fila se puede tocar)
+@Composable
+private fun OpcionOrigenFoto(icono: ImageVector, texto: String, alPresionar: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = alPresionar)
+            .padding(vertical = 14.dp, horizontal = 4.dp)
+    ) {
+        Icon(icono, contentDescription = null, tint = Teal, modifier = Modifier.size(26.dp))
+        Spacer(Modifier.width(16.dp))
+        Text(texto, fontSize = 16.sp, color = TextoPrincipal)
+    }
+}
+
+// Crea un archivo vacío en la caché de la app para que la cámara guarde ahí la foto
+private fun nuevoArchivoParaFoto(contexto: Context): Uri {
+    val carpeta = File(contexto.cacheDir, "fotos").apply { mkdirs() }
+    val archivo = File(carpeta, "foto_${System.currentTimeMillis()}.jpg")
+    return FileProvider.getUriForFile(contexto, "${contexto.packageName}.fotos", archivo)
+}
+
+// Borra el archivo de una foto de cámara que se canceló
+private fun borrarFotoDeCamara(contexto: Context, uri: Uri) {
+    runCatching { contexto.contentResolver.delete(uri, null, null) }
 }

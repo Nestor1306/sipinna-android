@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpeta donde la cámara guarda las fotos que se toman desde la app.
+     Está dentro de la caché de la app: no se respalda y Android la puede limpiar. -->
+<paths>
+    <cache-path name="fotos" path="fotos/" />
+</paths>
