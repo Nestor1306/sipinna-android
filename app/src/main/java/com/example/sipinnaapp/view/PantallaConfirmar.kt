@@ -28,7 +28,7 @@ import java.util.Locale
 import androidx.compose.foundation.clickable
 import java.util.Calendar
 import java.util.TimeZone
-import androidx.compose.ui.text.input.KeyboardType
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaConfirmar(
@@ -381,22 +381,4 @@ fun SelectorFechaHora(
     }
 }
 
-// Solo para reportes sin cuenta: correo opcional para recibir el folio (igual que la web).
-// Se manda en "contact_email". El servidor lo borra al cerrar el reporte.
-@Composable
-fun CampoCorreoSeguimiento(valor: String, alCambiar: (String) -> Unit, error: String = "") {
-    CampoConIcono(
-        etiqueta = "Correo para recibir tu folio (opcional)",
-        valor = valor,
-        alCambiar = { alCambiar(it.trim()) },
-        icono = Icons.Default.Email,
-        ayuda = "tucorreo@ejemplo.com",
-        teclado = KeyboardType.Email
-    )
-    Espacio(4.dp)
-    Text(
-        text = error.ifEmpty { "Solo lo usaremos para enviarte el folio; se borra al cerrar el reporte." },
-        fontSize = 12.sp,
-        color = if (error.isEmpty()) GrisTexto else RojoNoApto
-    )
-}
+

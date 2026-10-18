@@ -44,7 +44,6 @@ data class EstadoReporte(
     val reporteIdBorrador: String = "",         // paso 1: id del reporte en DRAFT
     val tokenEdicion: String = "",          // paso 1: llave de un reporte anónimo para los pasos 2 a 4
     val folioBorrador: String = "",             // paso 1: folio que asignó el servidor
-    val claveConsulta: String = "",             // paso 1: clave para consultar el reporte sin cuenta
     val enviadoAnonimo: Boolean = false, // el reporte se envió sin cuenta (no tiene folio que consultar)
     val guardadoSinConexion: Boolean = false,   // no había internet: se guardó y se enviará solo después
     val idsImagenes: List<String> = emptyList(), // paso 2: id de cada foto, mismo orden que "fotos"

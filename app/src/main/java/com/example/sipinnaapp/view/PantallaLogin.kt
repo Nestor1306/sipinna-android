@@ -14,8 +14,6 @@ import com.example.sipinnaapp.R
 import com.example.sipinnaapp.viewmodel.LoginVM
 import androidx.compose.ui.text.style.TextDecoration
 import com.example.sipinnaapp.ui.theme.GrisTexto
-import com.example.sipinnaapp.ui.theme.Teal
-
 
 @Composable
 fun PantallaLogin(
@@ -24,9 +22,7 @@ fun PantallaLogin(
     alEntrarAnonimo:() -> Unit,
     alOlvideContrasena: () -> Unit,
     alVerCreditos: () -> Unit,
-    modifier: Modifier = Modifier,
-    // null = todavía no se muestra el enlace (falta conectar la consulta pública)
-    alConsultarReporte: (() -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
 
@@ -108,13 +104,6 @@ fun PantallaLogin(
                 color = GrisTexto,
                 textDecoration = TextDecoration.Underline
             )
-        }
-
-        // Ver cómo va un reporte enviado sin cuenta (con folio y clave de consulta)
-        if (alConsultarReporte != null) {
-            TextButton(onClick = alConsultarReporte) {
-                Text("¿Hiciste un reporte sin cuenta? Consúltalo aquí", fontSize = 13.sp, color = Teal)
-            }
         }
 
         Spacer(Modifier.weight(1f))   // empuja el enlace hasta abajo

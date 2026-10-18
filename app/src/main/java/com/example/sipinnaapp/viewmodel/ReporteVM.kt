@@ -349,7 +349,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     private fun sinProgresoDeEnvio(e: EstadoReporte): EstadoReporte {
         if (e.reporteIdBorrador.isBlank()) return e
         return e.copy(
-            reporteIdBorrador = "", tokenEdicion = "", folioBorrador = "", claveConsulta = "",
+            reporteIdBorrador = "", tokenEdicion = "", folioBorrador = "",
             idsImagenes = emptyList(), fotosSubidas = emptySet()
         )
     }
