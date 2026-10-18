@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaPerfil.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Perfil del usuario: editar datos, cerrar sesión y eliminar cuenta.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.BorderStroke
@@ -20,6 +33,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.tec.sipinna.ui.theme.*
 
+/**
+ * Perfil del usuario: nombre, editar datos, cerrar sesión y eliminar cuenta (pide escribir ELIMINAR).
+ * @param nombre nombre que se muestra.
+ * @param alRegresar vuelve al Home.
+ * @param alCerrarSesion cierra la sesión y vuelve al Login.
+ * @param alEliminarCuenta elimina la cuenta; recibe qué hacer si falla. null = no se muestra (anónimo).
+ * @param alEditarDatos abre "Mis datos". null = no se muestra (anónimo).
+ */
 @Composable
 fun PantallaPerfil(
     nombre: String,

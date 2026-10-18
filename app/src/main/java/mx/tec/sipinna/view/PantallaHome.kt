@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaHome.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Pantalla principal con la lista de reportes, buscador, filtro y botones de acción.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-07
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.Image
@@ -39,6 +52,20 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 
+/**
+ * Pantalla principal: lista de reportes del usuario con buscador y filtro por estado,
+ * botones de SIPINNITO y botón para hacer un reporte nuevo.
+ * @param reportes pendientes de envío + historial del servidor.
+ * @param cargando muestra el indicador mientras llega el historial.
+ * @param mensajeError error al cargar el historial ("" = sin error).
+ * @param esAnonimo los anónimos no tienen historial; se muestra un aviso.
+ * @param alHacerReporte abre el flujo de reporte nuevo.
+ * @param alIrAPerfil abre el Perfil.
+ * @param alVerCreditos abre "Acerca de".
+ * @param alAbrirReporte abre el detalle del reporte tocado.
+ * @param alRefrescar se llama al deslizar hacia abajo para actualizar.
+ * @param avisoSinConexion texto de aviso cuando no hay conexión ("" = hay conexión).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaHome(
@@ -286,7 +313,7 @@ fun PantallaHome(
         }
     }
 
-// Pastilla gris con el ícono de filtro (a la derecha del buscador)
+/** Pastilla gris con el ícono de filtro (a la derecha del buscador) */
 @Composable
 fun BotonFiltro(alPresionar: () -> Unit, activo: Boolean = false) {
     Box(
@@ -307,7 +334,7 @@ fun BotonFiltro(alPresionar: () -> Unit, activo: Boolean = false) {
     }
 }
 
-// Corte diagonal del mapa dentro de la tarjeta (como en Figma)
+/** Corte diagonal del mapa dentro de la tarjeta (como en Figma) */
 private val FormaDiagonal = GenericShape { size, _ ->
     moveTo(0f, 0f)
     lineTo(size.width, 0f)
@@ -316,16 +343,18 @@ private val FormaDiagonal = GenericShape { size, _ ->
     close()
 }
 
-// Dirección de una imagen fija del mapa (Mapbox Static Images) con un pin en el reporte.
-// OJO: Mapbox pide primero la longitud y después la latitud.
-// 330x170 @2x = el tamaño del mapa en la tarjeta (165 x 85 dp) en buena resolución.
+/**
+ * Dirección de una imagen fija del mapa (Mapbox Static Images) con un pin en el reporte.
+ * OJO: Mapbox pide primero la longitud y después la latitud.
+ * 330x170 @2x = el tamaño del mapa en la tarjeta (165 x 85 dp) en buena resolución.
+ */
 fun urlMapa(latitud: Double, longitud: Double, token: String): String {
     return "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/" +
         "pin-s+0a8f91($longitud,$latitud)/$longitud,$latitud,15,0/330x170@2x" +
         "?access_token=$token"
 }
 
-// Tarjeta de un reporte: mapa a la izquierda, estado y detalle a la derecha
+/** Tarjeta de un reporte: mapa a la izquierda, estado y detalle a la derecha */
 @Composable
 fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
     // Texto y color según el estado real guardado en la base de datos
@@ -411,7 +440,7 @@ fun TarjetaReporte(reporte: ReporteResumen, alTocar: () -> Unit) {
 }
 
 
-// Folio con un botón para copiarlo (para buscarlo después o compartirlo)
+/** Folio con un botón para copiarlo (para buscarlo después o compartirlo) */
 @Composable
 fun FolioCopiable(folio: String, tamano: TextUnit = 12.sp) {
     val portapapeles = LocalClipboardManager.current

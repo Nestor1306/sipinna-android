@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — RegistroVM.kt
+ * Capa: ViewModel (estado y lógica de las pantallas)
+ *
+ * Lógica y validaciones del registro de ciudadanos.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-02
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -12,6 +25,7 @@ import mx.tec.sipinna.network.mensajeDeRespuesta
 import mx.tec.sipinna.network.sacarTokenDeCookie
 import mx.tec.sipinna.model.generoParaServidor
 
+/** Registro de ciudadanos (POST /auth/citizen). Valida los campos antes de enviarlos. */
 class RegistroVM : ViewModel() {
     companion object {
         const val MAX_DIGITOS_EDAD = 2
@@ -19,51 +33,65 @@ class RegistroVM : ViewModel() {
 
         private val FORMATO_CORREO = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
 
+        /** @return true si [correo] tiene formato nombre@dominio.ext. */
         fun correoValido(correo: String): Boolean = FORMATO_CORREO.matches(correo.trim())
 
+        /** @return true si [telefono] tiene 10 dígitos (México sin lada internacional). */
         fun telefonoValido(telefono: String): Boolean = telefono.length == DIGITOS_TELEFONO
     }
 
     private val _estado = MutableStateFlow(EstadoRegistro())
+    /** Estado que observa la pantalla. */
     val estado: StateFlow<EstadoRegistro> = _estado
 
     // --- Actualizacion de campos ---
 
+    /** Guarda el nombre escrito. */
     fun actualizarNombre(valor: String) {
         _estado.value = _estado.value.copy(nombre = valor)
     }
 
+    /** Guarda el apellido escrito. */
     fun actualizarApellido(valor: String) {
         _estado.value = _estado.value.copy(apellido = valor)
     }
 
+    /** Guarda el género elegido (texto de la lista). */
     fun actualizarGenero(valor: String) {
         _estado.value = _estado.value.copy(genero = valor)
     }
 
-    // Edad y teléfono solo aceptan números: cualquier otro carácter se descarta al escribir
+    /** Edad y teléfono solo aceptan números: cualquier otro carácter se descarta al escribir */
     fun actualizarEdad(valor: String) {
         _estado.value = _estado.value.copy(edad = valor.filter { it.isDigit() }.take(MAX_DIGITOS_EDAD))
     }
 
+    /** Guarda el teléfono; solo dígitos y máximo [DIGITOS_TELEFONO]. */
     fun actualizarTelefono(valor: String) {
         _estado.value = _estado.value.copy(telefono = valor.filter { it.isDigit() }.take(DIGITOS_TELEFONO))
     }
 
+    /** Guarda el correo escrito. */
     fun actualizarEmail(valor: String) {
         _estado.value = _estado.value.copy(email = valor)
     }
 
+    /** Guarda la contraseña escrita. */
     fun actualizarPassword(valor: String) {
         _estado.value = _estado.value.copy(password = valor)
     }
 
+    /** Guarda la confirmación de la contraseña. */
     fun actualizarConfirmarPassword(valor: String) {
         _estado.value = _estado.value.copy(confirmarPassword = valor)
     }
 
     // --- Registro ---
 
+    /**
+     * Valida los datos y crea la cuenta. Si el servidor responde bien, deja
+     * registroExitoso = true y el token de sesión en el estado.
+     */
     fun registrar() {
         val nombre = _estado.value.nombre.trim()
         val apellido = _estado.value.apellido.trim()
@@ -139,7 +167,7 @@ class RegistroVM : ViewModel() {
         }
     }
 
-    // El backend exige formato e164: +521234567890 (sin espacios ni guiones)
+    /** El backend exige formato e164: +521234567890 (sin espacios ni guiones) */
     private fun formatearTelefono(telefono: String): String {
         if (telefono.isEmpty()) return ""
 
@@ -149,10 +177,12 @@ class RegistroVM : ViewModel() {
         return if (telefono.startsWith("+")) "+$soloDigitos" else "+52$soloDigitos"
     }
 
+    /** Oculta el mensaje de error. */
     fun cerrarError() {
         _estado.value = _estado.value.copy(error = "")
     }
 
+    /** Limpia el formulario. */
     fun reiniciar() {
         _estado.value = EstadoRegistro()
     }

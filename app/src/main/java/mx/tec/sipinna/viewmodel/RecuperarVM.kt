@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — RecuperarVM.kt
+ * Capa: ViewModel (estado y lógica de las pantallas)
+ *
+ * Lógica de recuperación de contraseña en dos pasos (pedir código y cambiarla).
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-14
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -11,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/** Estado de la pantalla de recuperar contraseña. */
 data class EstadoRecuperar(
     val correo: String = "",
     val codigo: String = "",
@@ -23,7 +36,7 @@ data class EstadoRecuperar(
     val listo: Boolean = false            // la contraseña ya se cambió
 )
 
-// Recuperar la contraseña en 2 pasos: pedir el código al correo y cambiarla con ese código
+/** Recuperar la contraseña en 2 pasos: pedir el código al correo y cambiarla con ese código */
 class RecuperarVM : ViewModel() {
 
     companion object {
@@ -31,17 +44,24 @@ class RecuperarVM : ViewModel() {
     }
 
     private val _estado = MutableStateFlow(EstadoRecuperar())
+    /** Estado que observa la pantalla. */
     val estado: StateFlow<EstadoRecuperar> = _estado
 
+    /** Guarda el correo o teléfono escrito. */
     fun actualizarCorreo(valor: String) { _estado.value = _estado.value.copy(correo = valor) }
+    /** Guarda el código; solo acepta dígitos y como máximo [DIGITOS_CODIGO]. */
     fun actualizarCodigo(valor: String) {
         _estado.value = _estado.value.copy(codigo = valor.filter { it.isDigit() }.take(DIGITOS_CODIGO))
     }
+    /** Guarda la contraseña nueva. */
     fun actualizarNueva(valor: String) { _estado.value = _estado.value.copy(nueva = valor) }
+    /** Guarda la confirmación de la contraseña nueva. */
     fun actualizarConfirmar(valor: String) { _estado.value = _estado.value.copy(confirmar = valor) }
 
-    // Lo que escribió (correo o teléfono) → (email, number) como los pide el backend.
-    // Si no es válido, deja el error en pantalla y regresa null.
+    /**
+     * Lo que escribió (correo o teléfono) → (email, number) como los pide el backend.
+     * Si no es válido, deja el error en pantalla y regresa null.
+     */
     private fun contacto(): Pair<String?, String?>? {
         val texto = _estado.value.correo.trim()
         if (texto.contains("@")) {
@@ -64,7 +84,7 @@ class RecuperarVM : ViewModel() {
         return null to "+52$digitos"
     }
 
-    // Paso 1: manda el código al correo o por SMS. También sirve para "Reenviar código".
+    /** Paso 1: manda el código al correo o por SMS. También sirve para "Reenviar código". */
     fun pedirCodigo() {
         val (email, telefono) = contacto() ?: return
 
@@ -92,7 +112,7 @@ class RecuperarVM : ViewModel() {
         }
     }
 
-    // Paso 2: cambia la contraseña con el código
+    /** Paso 2: cambia la contraseña con el código */
     fun cambiarContrasena() {
         val e = _estado.value
         val error = when {
@@ -127,14 +147,15 @@ class RecuperarVM : ViewModel() {
         }
     }
 
-    // "Usar otro correo": regresa al paso 1
+    /** "Usar otro correo": regresa al paso 1 */
     fun cambiarCorreo() {
         _estado.value = _estado.value.copy(codigoEnviado = false, codigo = "", aviso = "")
     }
 
+    /** Oculta el mensaje de error. */
     fun cerrarError() { _estado.value = _estado.value.copy(error = "") }
 
-    // Se llama al entrar a la pantalla, para empezar limpio
+    /** Se llama al entrar a la pantalla, para empezar limpio */
     fun reiniciar(correo: String = "") { _estado.value = EstadoRecuperar(correo = correo) }
 }
 

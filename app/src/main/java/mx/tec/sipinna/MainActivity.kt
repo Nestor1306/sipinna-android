@@ -1,3 +1,17 @@
+/*
+ * SIPINNA — MainActivity.kt
+ * Capa: Punto de entrada de la app
+ *
+ * Activity principal. Crea los ViewModels, programa los workers y controla la navegación
+ * entre pantallas (AppNavegacion) y entre los 5 pasos del reporte (FlujoReporte).
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-02
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna
 
 import android.os.Bundle
@@ -48,11 +62,15 @@ import mx.tec.sipinna.worker.RevisarEstadosWorker
 import mx.tec.sipinna.viewmodel.PerfilVM
 import mx.tec.sipinna.view.PantallaEditarPerfil
 
-// Cuánto tarda el cambio suave entre pantallas (en milisegundos)
+/** Cuánto tarda el cambio suave entre pantallas (en milisegundos) */
 const val DURACION_TRANSICION = 400
-// Cada cuánto se vuelve a pedir el historial mientras el Home está abierto (milisegundos)
+/** Cada cuánto se vuelve a pedir el historial mientras el Home está abierto (milisegundos) */
 const val INTERVALO_ACTUALIZACION = 30_000L
 
+/**
+ * Única Activity de la app. Crea los ViewModels (que sobreviven a la rotación
+ * de pantalla), programa los trabajos en segundo plano y muestra [AppNavegacion].
+ */
 class MainActivity : ComponentActivity() {
 
     private val registroVM: RegistroVM by viewModels()
@@ -62,6 +80,10 @@ class MainActivity : ComponentActivity() {
     private val recuperarVM: RecuperarVM by viewModels()
     private val perfilVM: PerfilVM by viewModels()
 
+    /**
+     * Punto de entrada: programa [EnvioPendientesWorker] y [RevisarEstadosWorker]
+     * y dibuja la app con el tema de SIPINNA.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -89,8 +111,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Controla qué pantalla se muestra
-// "login", "registro", "home", "perfil" o "reporte"
+/**
+ * Controla qué pantalla se muestra
+ * "login", "registro", "home", "perfil" o "reporte"
+ */
 @Composable
 fun AppNavegacion(
     registroVM: RegistroVM,
@@ -349,7 +373,7 @@ fun AppNavegacion(
     }
 }
 
-// Las 5 pantallas del reporte. El paso actual lo lleva el ReporteVM
+/** Las 5 pantallas del reporte. El paso actual lo lleva el ReporteVM */
 @Composable
 fun FlujoReporte(
     vm: ReporteVM,

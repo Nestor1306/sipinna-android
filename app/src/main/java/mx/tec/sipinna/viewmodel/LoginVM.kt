@@ -1,3 +1,17 @@
+/*
+ * SIPINNA — LoginVM.kt
+ * Capa: ViewModel (estado y lógica de las pantallas)
+ *
+ * Lógica de inicio de sesión, acceso anónimo, cierre de sesión y eliminación de cuenta.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Emiliano García Ramos
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-02
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.viewmodel
 
 import android.app.Application
@@ -15,6 +29,10 @@ import kotlinx.coroutines.launch
 import mx.tec.sipinna.model.ConfirmacionEliminar
 import mx.tec.sipinna.network.cookieDeSesion
 
+/**
+ * Inicio y cierre de sesión. Guarda la sesión con [SessionManager] (token cifrado)
+ * para que el usuario siga dentro al volver a abrir la app.
+ */
 class LoginVM(
     application: Application
 ) : AndroidViewModel(application) {

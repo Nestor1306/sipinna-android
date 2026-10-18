@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — PerfilVM.kt
+ * Capa: ViewModel (estado y lógica de las pantallas)
+ *
+ * Lógica de "Mis datos": cargar y guardar la información de la cuenta (GET/PUT /account).
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-17
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -15,7 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Lo que muestra la pantalla "Mis datos"
+/** Lo que muestra la pantalla "Mis datos" */
 data class EstadoPerfil(
     val datos: DatosPerfil = DatosPerfil(),
     val cargando: Boolean = false,
@@ -26,13 +38,14 @@ data class EstadoPerfil(
     val sesionVencida: Boolean = false        // el servidor respondió 401
 )
 
-// Ver y editar los datos de la cuenta (GET /account y PUT /account)
+/** Ver y editar los datos de la cuenta (GET /account y PUT /account) */
 class PerfilVM : ViewModel() {
 
     private val _estado = MutableStateFlow(EstadoPerfil())
+    /** Estado que observa la pantalla. */
     val estado: StateFlow<EstadoPerfil> = _estado
 
-    // Trae los datos del servidor al abrir la pantalla
+    /** Trae los datos del servidor al abrir la pantalla */
     fun cargar(token: String) {
         _estado.value = EstadoPerfil(cargando = true)
         viewModelScope.launch {
@@ -55,17 +68,17 @@ class PerfilVM : ViewModel() {
         }
     }
 
-    // Deja la pantalla vacía (al cerrar sesión o si la sesión caducó)
+    /** Deja la pantalla vacía (al cerrar sesión o si la sesión caducó) */
     fun reiniciar() {
         _estado.value = EstadoPerfil()
     }
 
-    // La pantalla avisa cada vez que se escribe algo
+    /** La pantalla avisa cada vez que se escribe algo */
     fun cambiar(datos: DatosPerfil) {
         _estado.value = _estado.value.copy(datos = datos, error = "", guardado = false)
     }
 
-    // Guarda los cambios. Si salió bien, avisa el nombre nuevo (para el Perfil y la sesión).
+    /** Guarda los cambios. Si salió bien, avisa el nombre nuevo (para el Perfil y la sesión). */
     fun guardar(token: String, alGuardar: (nombre: String) -> Unit) {
         val d = _estado.value.datos
         val problema = revisar(d)
@@ -108,7 +121,7 @@ class PerfilVM : ViewModel() {
         }
     }
 
-    // Revisiones antes de mandar (las mismas reglas que el servidor)
+    /** Revisiones antes de mandar (las mismas reglas que el servidor) */
     private fun revisar(d: DatosPerfil): String {
         val edad = d.edad.toIntOrNull()
         return when {
@@ -122,7 +135,7 @@ class PerfilVM : ViewModel() {
         }
     }
 
-    // Del formato del servidor al de la pantalla
+    /** Del formato del servidor al de la pantalla */
     private fun aPantalla(p: PerfilCuenta) = DatosPerfil(
         nombre = p.nombre.orEmpty(),
         correo = p.email.orEmpty(),
@@ -131,7 +144,7 @@ class PerfilVM : ViewModel() {
         genero = GENEROS.firstOrNull { it.first == p.genero }?.second.orEmpty()
     )
 
-    // "+525512345678" o "5512345678" → "5512345678"
+    /** "+525512345678" o "5512345678" → "5512345678" */
     private fun sinLada(telefono: String): String {
         val digitos = telefono.filter { it.isDigit() }
         return if (digitos.length > 10 && digitos.startsWith("52")) digitos.drop(2) else digitos

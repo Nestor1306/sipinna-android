@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaCreditos.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Pantalla "Acerca de" con el equipo, profesores, materia y periodo.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-10-15
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.Image
@@ -25,6 +38,7 @@ import mx.tec.sipinna.ui.theme.*
 
 // ---------- Datos de los créditos (editar aquí) ----------
 
+/** Integrante del equipo que aparece en los créditos. */
 data class Integrante(val nombre: String, val matricula: String = "")
 
 val INTEGRANTES = listOf(
@@ -47,6 +61,10 @@ const val PERIODO = "AGO - DIC de 2026"                      // ej. "Agosto–Di
 
 // ---------------------------------------------------------
 
+/**
+ * Pantalla "Acerca de": equipo, profesores, materia y periodo.
+ * @param alRegresar vuelve a la pantalla desde donde se abrió (Login o Perfil).
+ */
 @Composable
 fun PantallaCreditos(
     alRegresar: () -> Unit,
@@ -135,6 +153,7 @@ fun PantallaCreditos(
     }
 }
 
+/** Tarjeta con título para agrupar datos de los créditos. */
 @Composable
 private fun TarjetaCreditos(titulo: String, contenido: @Composable ColumnScope.() -> Unit) {
     Card(
@@ -151,6 +170,7 @@ private fun TarjetaCreditos(titulo: String, contenido: @Composable ColumnScope.(
     }
 }
 
+/** Renglón etiqueta / valor dentro de una tarjeta de créditos. */
 @Composable
 private fun DatoCredito(etiqueta: String, valor: String) {
     Column(modifier = Modifier.padding(vertical = 5.dp)) {

@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — EnvioReporte.kt
+ * Capa: Data (almacenamiento local en el teléfono)
+ *
+ * Envío completo de un reporte guardado (los 4 pasos de la API), usado por el worker de pendientes.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-14
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.data
 
 import mx.tec.sipinna.model.ImagenPorSubir
@@ -10,14 +22,22 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.IOException
 
+/**
+ * Resultado de [enviarReporteCompleto]:
+ * - [Enviado]: el reporte quedó registrado en el servidor.
+ * - [SinConexion]: no hubo internet; se debe reintentar más tarde.
+ * - [Rechazado]: el servidor respondió con error ([codigo] HTTP y [detalle]).
+ */
 sealed class ResultadoEnvio {
     object Enviado : ResultadoEnvio()
     object SinConexion : ResultadoEnvio()                                 // se intenta más tarde
     data class Rechazado(val codigo: Int, val detalle: String?) : ResultadoEnvio()
 }
 
-// Envía un reporte guardado de principio a fin (los mismos 4 pasos que ReporteVM.enviar).
-// sesion = cookie "session_token=..." o null para enviarlo anónimo.
+/**
+ * Envía un reporte guardado de principio a fin (los mismos 4 pasos que ReporteVM.enviar).
+ * sesion = cookie "session_token=..." o null para enviarlo anónimo.
+ */
 suspend fun enviarReporteCompleto(
     sesion: String?,
     peticion: ReporteRequest,

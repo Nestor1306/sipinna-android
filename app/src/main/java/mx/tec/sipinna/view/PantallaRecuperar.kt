@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaRecuperar.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Recuperación de contraseña con código enviado por correo o SMS.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-10-14
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.layout.*
@@ -18,6 +31,11 @@ import androidx.compose.ui.unit.sp
 import mx.tec.sipinna.ui.theme.*
 import mx.tec.sipinna.viewmodel.RecuperarVM
 
+/**
+ * Recuperar contraseña en dos pasos: pedir el código (correo o SMS) y escribir la contraseña nueva.
+ * @param vm ViewModel de la recuperación.
+ * @param alRegresar vuelve al Login.
+ */
 @Composable
 fun PantallaRecuperar(
     vm: RecuperarVM,

@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaLogin.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Inicio de sesión con correo o teléfono, acceso anónimo y recuperación de contraseña.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-02
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.Image
@@ -15,6 +28,14 @@ import mx.tec.sipinna.viewmodel.LoginVM
 import androidx.compose.ui.text.style.TextDecoration
 import mx.tec.sipinna.ui.theme.GrisTexto
 
+/**
+ * Inicio de sesión con correo o teléfono y contraseña.
+ * @param vm ViewModel del login.
+ * @param alIrARegistro abre el registro.
+ * @param alEntrarAnonimo abre el aviso para reportar sin cuenta.
+ * @param alOlvideContrasena abre la recuperación de contraseña.
+ * @param alVerCreditos abre "Acerca de".
+ */
 @Composable
 fun PantallaLogin(
     vm: LoginVM,

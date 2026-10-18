@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — ComponentesReporte.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Componentes compartidos por los pasos del reporte (encabezado, barra de progreso, botones, chips).
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.background
@@ -30,7 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 
 // --- Componentes reutilizables del flujo de reporte (según Figma) ---
 
-// Flecha de regreso + título + subtítulo + barra de progreso
+/** Flecha de regreso + título + subtítulo + barra de progreso */
 @Composable
 fun EncabezadoPaso(
     titulo: String,
@@ -65,7 +78,7 @@ fun EncabezadoPaso(
     }
 }
 
-// Línea de progreso con degradado teal → azul
+/** Línea de progreso con degradado teal → azul */
 @Composable
 fun BarraProgreso(paso: Int, total: Int) {
     val fraccion = paso.toFloat() / total.toFloat()
@@ -89,7 +102,7 @@ fun BarraProgreso(paso: Int, total: Int) {
     }
 }
 
-// Botón grande con degradado teal (Confirmar / Siguiente / Enviar)
+/** Botón grande con degradado teal (Confirmar / Siguiente / Enviar) */
 @Composable
 fun BotonPrincipal(
     texto: String,
@@ -130,7 +143,7 @@ fun BotonPrincipal(
     }
 }
 
-// Chip de opción (pantalla "Información del niño")
+/** Chip de opción (pantalla "Información del niño") */
 @Composable
 fun ChipOpcion(
     texto: String,
@@ -156,7 +169,7 @@ fun ChipOpcion(
     }
 }
 
-// Etiqueta pequeña tipo "PREGUNTA 1"
+/** Etiqueta pequeña tipo "PREGUNTA 1" */
 @Composable
 fun EtiquetaPregunta(texto: String) {
     Text(
@@ -168,7 +181,7 @@ fun EtiquetaPregunta(texto: String) {
     )
 }
 
-// Barra de búsqueda gris redondeada (Home y Locación)
+/** Barra de búsqueda gris redondeada (Home y Locación) */
 @Composable
 fun CampoBusqueda(
     valor: String,
@@ -205,7 +218,7 @@ fun CampoBusqueda(
     )
 }
 
-// Botón circular (el "+" y el "≡" del Home)
+/** Botón circular (el "+" y el "≡" del Home) */
 @Composable
 fun BotonCircular(
     fondo: Color,
@@ -225,8 +238,10 @@ fun BotonCircular(
     }
 }
 
-// Aviso para emergencias: un reporte en la app no es inmediato.
-// "Llamar" abre el marcador con el 911 escrito; la persona decide si llama.
+/**
+ * Aviso para emergencias: un reporte en la app no es inmediato.
+ * "Llamar" abre el marcador con el 911 escrito; la persona decide si llama.
+ */
 @Composable
 fun AvisoEmergencia(modifier: Modifier = Modifier) {
     val contexto = LocalContext.current

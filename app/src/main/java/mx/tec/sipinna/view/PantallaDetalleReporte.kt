@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaDetalleReporte.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Detalle de un reporte enviado: estado, mapa, fotos y datos capturados.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-10-06
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.background
@@ -33,7 +46,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// Detalle de un reporte enviado, con lo que hay guardado en la base de datos
+/** Detalle de un reporte enviado, con lo que hay guardado en la base de datos */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaDetalleReporte(
@@ -102,6 +115,10 @@ fun PantallaDetalleReporte(
     }
 }
 
+/**
+ * Contenido del detalle cuando ya se tiene el reporte: estado, ubicación en mapa,
+ * fotos (se pueden ampliar o recargar si su enlace caducó) y datos del NNA.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean, alRecargarFotos: () -> Unit) {
@@ -332,7 +349,7 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean, alRe
     }
 }
 
-// Foto a pantalla completa sobre fondo negro; se cierra tocándola o con "atrás"
+/** Foto a pantalla completa sobre fondo negro; se cierra tocándola o con "atrás" */
 @Composable
 private fun FotoEnGrande(enlace: String, alCerrar: () -> Unit) {
     Dialog(
@@ -364,10 +381,13 @@ private fun FotoEnGrande(enlace: String, alCerrar: () -> Unit) {
     }
 }
 
-// La app guarda la dirección y la condición al final de la descripción
-// ("Dirección: ..." y "Condición: ..."). Aquí se vuelven a separar.
+/**
+ * La app guarda la dirección y la condición al final de la descripción
+ * ("Dirección: ..." y "Condición: ..."). Aquí se vuelven a separar.
+ */
 private data class PartesDescripcion(val texto: String, val direccion: String, val condicion: String)
 
+/** Separa la descripción en texto, dirección y condición (ver [PartesDescripcion]). */
 private fun separarDescripcion(descripcion: String?): PartesDescripcion {
     var direccion = ""
     var condicion = ""
@@ -382,7 +402,7 @@ private fun separarDescripcion(descripcion: String?): PartesDescripcion {
     return PartesDescripcion(texto.joinToString("\n").trim(), direccion, condicion)
 }
 
-// "2026-10-02T19:05:31.12Z" o "2026-10-02T19:00" → "2 oct 2026 · 13:05" (hora local)
+/** "2026-10-02T19:05:31.12Z" o "2026-10-02T19:00" → "2 oct 2026 · 13:05" (hora local) */
 fun fechaLegible(valor: String?): String {
     if (valor.isNullOrBlank()) return "—"
     val formato = DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm", Locale("es", "MX"))

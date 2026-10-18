@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — AsistenteSipinnito.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Botones de SIPINNITO en el Home: escribir por WhatsApp o llamar.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-10-17
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import android.content.ActivityNotFoundException
@@ -23,21 +36,21 @@ import androidx.compose.ui.unit.sp
 import mx.tec.sipinna.ui.theme.Teal
 import mx.tec.sipinna.ui.theme.TextoPrincipal
 
-// Número de SIPINNITO (el asistente). Si el de WhatsApp es otro, se cambia solo aquí.
+/** Número de SIPINNITO (el asistente). Si el de WhatsApp es otro, se cambia solo aquí. */
 const val TELEFONO_SIPINNITO = "+17402848974"
 const val WHATSAPP_SIPINNITO = "+17402848974"
 
-// Mensaje con el que se abre el chat de WhatsApp
+/** Mensaje con el que se abre el chat de WhatsApp */
 private const val SALUDO_WHATSAPP = "Hola SIPINNITO, quiero hacer un reporte."
 
 private val VerdeWhatsApp = Color(0xFF25D366)
 
-// Abre el marcador con el número escrito; la persona decide si llama (no pide permisos)
+/** Abre el marcador con el número escrito; la persona decide si llama (no pide permisos) */
 fun llamarASipinnito(contexto: Context) {
     contexto.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$TELEFONO_SIPINNITO")))
 }
 
-// Abre el chat de WhatsApp con SIPINNITO (si no hay WhatsApp, se abre en el navegador)
+/** Abre el chat de WhatsApp con SIPINNITO (si no hay WhatsApp, se abre en el navegador) */
 fun abrirWhatsAppSipinnito(contexto: Context) {
     val numero = WHATSAPP_SIPINNITO.filter { it.isDigit() }   // wa.me pide el número sin "+"
     val enlace = Uri.parse("https://wa.me/$numero?text=" + Uri.encode(SALUDO_WHATSAPP))
@@ -48,7 +61,7 @@ fun abrirWhatsAppSipinnito(contexto: Context) {
     }
 }
 
-// Los dos botones del asistente (WhatsApp y llamada), uno arriba del otro, solo con ícono
+/** Los dos botones del asistente (WhatsApp y llamada), uno arriba del otro, solo con ícono */
 @Composable
 fun BotonesAsistente(modifier: Modifier = Modifier) {
     val contexto = LocalContext.current
@@ -72,7 +85,7 @@ fun BotonesAsistente(modifier: Modifier = Modifier) {
     }
 }
 
-// Botón redondo con el ícono (la descripción la lee TalkBack)
+/** Botón redondo con el ícono (la descripción la lee TalkBack) */
 @Composable
 private fun BotonAsistente(
     icono: ImageVector,

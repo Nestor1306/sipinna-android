@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaInfoNino.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Paso 3 del reporte: preguntas sobre la niña, niño o adolescente.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.layout.*
@@ -13,6 +26,12 @@ import mx.tec.sipinna.ui.theme.GrisTexto
 import mx.tec.sipinna.ui.theme.TextoPrincipal
 import mx.tec.sipinna.viewmodel.ReporteVM
 
+/**
+ * Paso 3 del reporte: preguntas sobre la niña, niño o adolescente
+ * (peligro inmediato, cantidad, edad, tipo de trabajo, condición y situación de riesgo).
+ * @param vm ViewModel del reporte.
+ * @param alRegresar regresa al paso anterior.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaInfoNino(
@@ -168,6 +187,7 @@ fun PantallaInfoNino(
     }
 }
 
+/** Texto de una pregunta del formulario. */
 @Composable
 fun TituloPregunta(texto: String) {
     Text(
@@ -177,11 +197,13 @@ fun TituloPregunta(texto: String) {
         color = TextoPrincipal
     )
 }
-// Opciones de la pregunta de riesgo: valor que espera la API → texto en pantalla (igual que la web)
+/** Opciones de la pregunta de riesgo: valor que espera la API → texto en pantalla (igual que la web) */
 val OPCIONES_RIESGO = listOf("si" to "Sí", "no" to "No", "no_se" to "No sé")
 
-// Pregunta "¿Observaste alguna situación de riesgo?". Es distinta de "peligro inmediato".
-// seleccion = "si", "no", "no_se" o "" si todavía no contesta.
+/**
+ * Pregunta "¿Observaste alguna situación de riesgo?". Es distinta de "peligro inmediato".
+ * seleccion = "si", "no", "no_se" o "" si todavía no contesta.
+ */
 @Composable
 fun PreguntaRiesgo(numero: Int, seleccion: String, alElegir: (String) -> Unit) {
     EtiquetaPregunta("Pregunta $numero")

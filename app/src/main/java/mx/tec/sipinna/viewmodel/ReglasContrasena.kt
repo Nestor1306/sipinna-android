@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — ReglasContrasena.kt
+ * Capa: ViewModel (estado y lógica de las pantallas)
+ *
+ * Reglas de contraseña (longitud, mayúscula, carácter especial) compartidas por registro y recuperación.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.viewmodel
 
 // Reglas de la contraseña al crear una cuenta:
@@ -11,17 +23,19 @@ package mx.tec.sipinna.viewmodel
 
 const val CONTRASENA_MIN = 10
 
-// El backend usa bcrypt, que solo acepta 72 bytes. Una letra normal ocupa 1 byte;
-// las letras con acento, la ñ y los emojis ocupan 2 o más.
+/**
+ * El backend usa bcrypt, que solo acepta 72 bytes. Una letra normal ocupa 1 byte;
+ * las letras con acento, la ñ y los emojis ocupan 2 o más.
+ */
 const val CONTRASENA_MAX = 72
 
 private fun bytesContrasena(contrasena: String): Int =
     contrasena.toByteArray(Charsets.UTF_8).size
 
-// Un requisito y si ya se cumple (para la lista con palomitas del registro)
+/** Un requisito y si ya se cumple (para la lista con palomitas del registro) */
 data class RequisitoContrasena(val texto: String, val cumple: Boolean)
 
-// Cuenta caracteres "reales": un emoji cuenta como 1 aunque internamente ocupe 2
+/** Cuenta caracteres "reales": un emoji cuenta como 1 aunque internamente ocupe 2 */
 fun largoContrasena(contrasena: String): Int =
     contrasena.codePointCount(0, contrasena.length)
 
@@ -31,11 +45,17 @@ private fun tieneMayuscula(contrasena: String): Boolean =
 private fun tieneEspecial(contrasena: String): Boolean =
     contrasena.any { !it.isLetterOrDigit() && !it.isWhitespace() }
 
-// Saltos de línea, tabuladores y otros caracteres invisibles no se permiten
-// (el espacio normal sí)
+/**
+ * Saltos de línea, tabuladores y otros caracteres invisibles no se permiten
+ * (el espacio normal sí)
+ */
 private fun soloCaracteresPermitidos(contrasena: String): Boolean =
     contrasena.none { it.isISOControl() }
 
+/**
+ * Lista de requisitos y si ya se cumplen, para mostrarla con palomitas mientras se escribe.
+ * @param contrasena lo que lleva escrito el usuario.
+ */
 fun requisitosContrasena(contrasena: String): List<RequisitoContrasena> {
     val largo = largoContrasena(contrasena)
     return listOf(
@@ -48,10 +68,11 @@ fun requisitosContrasena(contrasena: String): List<RequisitoContrasena> {
     )
 }
 
+/** @return true si [contrasena] cumple todos los requisitos. */
 fun contrasenaValida(contrasena: String): Boolean =
     soloCaracteresPermitidos(contrasena) && requisitosContrasena(contrasena).all { it.cumple }
 
-// Mensaje para el aviso de error: dice lo primero que falta
+/** Mensaje para el aviso de error: dice lo primero que falta */
 fun errorDeContrasena(contrasena: String): String? {
     if (!soloCaracteresPermitidos(contrasena)) {
         return "La contraseña no puede tener saltos de línea ni tabuladores"

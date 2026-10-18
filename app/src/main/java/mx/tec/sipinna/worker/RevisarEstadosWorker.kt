@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — RevisarEstadosWorker.kt
+ * Capa: Worker (trabajo en segundo plano con WorkManager)
+ *
+ * Revisa cada ~15 minutos si algún reporte cambió de estado y lo notifica.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-15
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.worker
 
 import android.Manifest
@@ -30,8 +42,10 @@ import java.util.concurrent.TimeUnit
 import mx.tec.sipinna.view.estadoPublico
 import android.util.Log
 
-// Cada ~15 minutos (aunque la app esté cerrada) revisa si algún reporte cambió de estado
-// y, si sí, avisa con una notificación.
+/**
+ * Cada ~15 minutos (aunque la app esté cerrada) revisa si algún reporte cambió de estado
+ * y, si sí, avisa con una notificación.
+ */
 class RevisarEstadosWorker(contexto: Context, parametros: WorkerParameters) :
     CoroutineWorker(contexto, parametros) {
 
@@ -76,7 +90,7 @@ class RevisarEstadosWorker(contexto: Context, parametros: WorkerParameters) :
         private const val NOMBRE = "revisar_estados"
         private const val CANAL = "estado_reportes"
 
-        // Se llama al abrir la app. KEEP: si ya estaba programado, no lo duplica.
+        /** Se llama al abrir la app. KEEP: si ya estaba programado, no lo duplica. */
         fun programar(context: Context) {
             val tarea = PeriodicWorkRequestBuilder<RevisarEstadosWorker>(15, TimeUnit.MINUTES)
                 .setConstraints(
@@ -87,6 +101,7 @@ class RevisarEstadosWorker(contexto: Context, parametros: WorkerParameters) :
                 .enqueueUniquePeriodicWork(NOMBRE, ExistingPeriodicWorkPolicy.KEEP, tarea)
         }
 
+        /** Crea el canal de notificaciones "Estado de tus reportes" (Android 8+). */
         private fun crearCanal(context: Context) {
             val canal = NotificationChannel(
                 CANAL, "Estado de mis reportes", NotificationManager.IMPORTANCE_DEFAULT
@@ -94,6 +109,11 @@ class RevisarEstadosWorker(contexto: Context, parametros: WorkerParameters) :
             context.getSystemService(NotificationManager::class.java).createNotificationChannel(canal)
         }
 
+        /**
+         * Muestra la notificación de que un reporte cambió de estado.
+         * @param folio folio del reporte.
+         * @param estado estado nuevo (se traduce al texto público).
+         */
         @SuppressLint("MissingPermission")   // el permiso se revisa aquí mismo
         private fun avisar(context: Context, folio: String, estado: String) {
             if (Build.VERSION.SDK_INT >= 33 &&

@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaEditarPerfil.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Pantalla "Mis datos" para ver y editar la información de la cuenta.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-10-17
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.layout.*
@@ -20,9 +33,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.tec.sipinna.ui.theme.*
 
-// Datos del perfil tal como se ven en la pantalla.
-// El género va con el texto de la lista (OPCIONES_GENERO); el ViewModel lo traduce
-// a los valores de la API (hombre, mujer, otro, prefiero-no-decir).
+/**
+ * Datos del perfil tal como se ven en la pantalla.
+ * El género va con el texto de la lista (OPCIONES_GENERO); el ViewModel lo traduce
+ * a los valores de la API (hombre, mujer, otro, prefiero-no-decir).
+ */
 data class DatosPerfil(
     val nombre: String = "",
     val correo: String = "",
@@ -31,8 +46,10 @@ data class DatosPerfil(
     val genero: String = ""
 )
 
-// Ver y editar los datos de la cuenta (GET /account y PUT /account).
-// La pantalla no hace las peticiones: muestra lo que le pasen y avisa con alGuardar.
+/**
+ * Ver y editar los datos de la cuenta (GET /account y PUT /account).
+ * La pantalla no hace las peticiones: muestra lo que le pasen y avisa con alGuardar.
+ */
 @Composable
 fun PantallaEditarPerfil(
     datos: DatosPerfil,
@@ -154,7 +171,7 @@ fun PantallaEditarPerfil(
     }
 }
 
-// Vista previa para Android Studio (no se usa en la app)
+/** Vista previa para Android Studio (no se usa en la app) */
 @Preview(showBackground = true)
 @Composable
 private fun VistaPreviaEditarPerfil() {

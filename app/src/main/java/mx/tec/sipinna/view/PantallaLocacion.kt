@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaLocacion.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Paso 1 del reporte: ubicación con mapa, ubicación actual y buscador de direcciones.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import android.Manifest
@@ -45,6 +58,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * Paso 1 del reporte: ubicación en el mapa de Mapbox.
+ * Se puede tocar el mapa, usar la ubicación actual o buscar una dirección.
+ * @param vm ViewModel del reporte (guarda coordenadas, dirección y referencia).
+ * @param alRegresar sale del reporte.
+ */
 @OptIn(MapboxExperimental::class)
 @Composable
 fun PantallaLocacion(
@@ -402,8 +421,10 @@ fun PantallaLocacion(
         Espacio(24.dp)
     }
 }
-// Campo opcional "Calle o punto de referencia" (igual que la web). Se manda aparte,
-// en "reference", y ya no dentro de la descripción. Máximo 300 caracteres.
+/**
+ * Campo opcional "Calle o punto de referencia" (igual que la web). Se manda aparte,
+ * en "reference", y ya no dentro de la descripción. Máximo 300 caracteres.
+ */
 @Composable
 fun CampoReferencia(valor: String, alCambiar: (String) -> Unit) {
     CampoConIcono(

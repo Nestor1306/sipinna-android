@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — EstadosReporte.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Traducción de los estados internos del servidor a los 5 estados públicos, con su texto y color.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-22
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.ui.graphics.Color
@@ -9,16 +22,18 @@ import mx.tec.sipinna.ui.theme.VerdeConfirmado
 
 // Los colores de cada estado son los mismos que usa la web (dashboard de www.sipinna.com)
 
-// Cómo se ve cada estado del reporte en pantalla
+/** Cómo se ve cada estado del reporte en pantalla */
 data class InfoEstado(
     val titulo: String,
     val color: Color,
     val detalle: String
 )
 
-// Estados que el backend le muestra al ciudadano (ya traducidos), en el orden en que
-// avanza un reporte. La primera parte es el valor que llega de la API; la segunda, cómo
-// se ve en la app. También es la lista de opciones del filtro del Home.
+/**
+ * Estados que el backend le muestra al ciudadano (ya traducidos), en el orden en que
+ * avanza un reporte. La primera parte es el valor que llega de la API; la segunda, cómo
+ * se ve en la app. También es la lista de opciones del filtro del Home.
+ */
 val ESTADOS_REPORTE = listOf(
     "recibido" to "Recibido",
     "en_revision" to "En revisión",
@@ -28,9 +43,11 @@ val ESTADOS_REPORTE = listOf(
     "pendiente_envio" to "Pendiente de envío"   // solo existe en el teléfono (sin internet)
 )
 
-// El backend ya manda el estado público, pero los datos guardados en el teléfono
-// (historial sin conexión, estados conocidos de las notificaciones) pueden traer los
-// nombres internos de antes. Esta función los traduce igual que el backend.
+/**
+ * El backend ya manda el estado público, pero los datos guardados en el teléfono
+ * (historial sin conexión, estados conocidos de las notificaciones) pueden traer los
+ * nombres internos de antes. Esta función los traduce igual que el backend.
+ */
 fun estadoPublico(estado: String?): String = when (estado) {
     null, "" -> "recibido"
     "DRAFT", "borrador" -> "borrador"
@@ -43,7 +60,7 @@ fun estadoPublico(estado: String?): String = when (estado) {
     else -> "en_revision"
 }
 
-// Convierte el estado (nuevo o viejo) en su texto y color
+/** Convierte el estado (nuevo o viejo) en su texto y color */
 fun infoDeEstado(estado: String?): InfoEstado {
     return when (estadoPublico(estado)) {
         // Se guardó en el teléfono sin internet (no viene de la base de datos)

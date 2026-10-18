@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaRegistro.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Registro de ciudadanos y componentes de formulario reutilizados en otras pantallas.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-02
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.Image
@@ -43,6 +56,12 @@ import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import mx.tec.sipinna.viewmodel.requisitosContrasena
 import androidx.compose.ui.text.style.TextOverflow
 
+/**
+ * Registro de ciudadano: datos personales, contacto y contraseña con sus requisitos.
+ * @param vm ViewModel del registro.
+ * @param alIrALogin vuelve al Login.
+ * @param alRegistrado se llama con el token y el nombre cuando el servidor crea la cuenta.
+ */
 @Composable
 fun PantallaRegistro(
     vm: RegistroVM,
@@ -275,7 +294,7 @@ fun PantallaRegistro(
 
 // --- Componentes reutilizables ---
 
-// Agrupa dos campos lado a lado, alineados por arriba
+/** Agrupa dos campos lado a lado, alineados por arriba */
 @Composable
 fun FilaDeCampos(contenido: @Composable RowScope.() -> Unit) {
     Row(
@@ -285,16 +304,19 @@ fun FilaDeCampos(contenido: @Composable RowScope.() -> Unit) {
     )
 }
 
+/** Título grande de una pantalla. */
 @Composable
 fun Titulo(texto: String) {
     Text(text = texto, fontSize = 32.sp, fontWeight = FontWeight.Bold)
 }
 
+/** Texto gris debajo del título. */
 @Composable
 fun Subtitulo(texto: String) {
     Text(text = texto, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
+/** Campo de texto simple con etiqueta. */
 @Composable
 fun CampoTexto(
     etiqueta: String,
@@ -313,6 +335,7 @@ fun CampoTexto(
     )
 }
 
+/** Campo de contraseña con el texto oculto. */
 @Composable
 fun CampoPassword(
     valor: String,
@@ -331,6 +354,7 @@ fun CampoPassword(
     )
 }
 
+/** Botón principal de la pantalla de registro. */
 @Composable
 fun BotonRegistrar(alPresionar: () -> Unit) {
     Button(
@@ -341,6 +365,7 @@ fun BotonRegistrar(alPresionar: () -> Unit) {
     }
 }
 
+/** Espacio vertical en blanco de [altura]. */
 @Composable
 fun Espacio(altura: Dp) {
     Spacer(modifier = Modifier.height(altura))
@@ -348,9 +373,10 @@ fun Espacio(altura: Dp) {
 
 // --- Componentes del diseño nuevo de registro ---
 
+/** Opciones de género como se ven en pantalla (ver GENEROS en model/Usuario.kt para los valores del servidor). */
 val OPCIONES_GENERO = listOf("Masculino", "Femenino", "Otro", "Prefiero no mencionarlo")
 
-// Texto pequeño que va arriba de cada campo ("Nombre", "Correo electrónico"...)
+/** Texto pequeño que va arriba de cada campo ("Nombre", "Correo electrónico"...) */
 @Composable
 fun EtiquetaCampo(texto: String) {
     Text(
@@ -361,8 +387,10 @@ fun EtiquetaCampo(texto: String) {
     )
 }
 
-// Lista desplegable para elegir el género.
-// Se ve igual que los demás campos, pero al tocarlo abre un menú con las opciones.
+/**
+ * Lista desplegable para elegir el género.
+ * Se ve igual que los demás campos, pero al tocarlo abre un menú con las opciones.
+ */
 @Composable
 fun SelectorGenero(
     seleccion: String,               // la opción elegida ("" si todavía no elige)
@@ -428,7 +456,7 @@ fun SelectorGenero(
     }
 }
 
-// Campo de texto con su etiqueta arriba y un ícono a la izquierda
+/** Campo de texto con su etiqueta arriba y un ícono a la izquierda */
 @Composable
 fun CampoConIcono(
     etiqueta: String,
@@ -461,9 +489,11 @@ fun CampoConIcono(
     }
 }
 
-// Campo de contraseña con candado a la izquierda y un "ojo" a la derecha
-// para mostrar u ocultar lo que se escribe
-// Requisitos de la contraseña: gris mientras falta, verde con palomita cuando se cumple
+/**
+ * Campo de contraseña con candado a la izquierda y un "ojo" a la derecha
+ * para mostrar u ocultar lo que se escribe
+ * Requisitos de la contraseña: gris mientras falta, verde con palomita cuando se cumple
+ */
 @Composable
 fun RequisitosContrasena(contrasena: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -483,6 +513,7 @@ fun RequisitosContrasena(contrasena: String) {
     }
 }
 
+/** Campo de contraseña con ícono de ojo para mostrar u ocultar lo escrito. */
 @Composable
 fun CampoPasswordConOjo(
     etiqueta: String,

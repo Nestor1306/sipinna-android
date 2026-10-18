@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaAvisoAnonimo.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Aviso antes de reportar sin cuenta: qué implica y la opción de crear una cuenta.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-10-14
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.activity.compose.BackHandler
@@ -19,10 +32,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Rojo más oscuro que RojoNoApto para que el texto blanco se lea bien
+/** Rojo más oscuro que RojoNoApto para que el texto blanco se lea bien */
 private val RojoAviso = Color(0xFFB42332)   // rojo de la paleta de la web
 
-// Aviso antes de entrar sin cuenta: sin registrarse no se puede dar seguimiento al reporte
+/** Aviso antes de entrar sin cuenta: sin registrarse no se puede dar seguimiento al reporte */
 @Composable
 fun PantallaAvisoAnonimo(
     alContinuarAnonimo: () -> Unit,

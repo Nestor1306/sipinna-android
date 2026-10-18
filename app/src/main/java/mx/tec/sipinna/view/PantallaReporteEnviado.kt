@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaReporteEnviado.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Confirmación de envío con el folio del reporte.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.background
@@ -21,6 +34,12 @@ import androidx.compose.ui.text.style.TextAlign
 import mx.tec.sipinna.ui.theme.*
 import mx.tec.sipinna.viewmodel.ReporteVM
 
+/**
+ * Confirmación final: folio del reporte (se puede copiar), aviso si se guardó sin conexión
+ * y, si fue anónimo, que no tendrá seguimiento.
+ * @param vm ViewModel del reporte (lee el folio y el resultado).
+ * @param alCerrar vuelve al Home.
+ */
 @Composable
 fun PantallaReporteEnviado(
     vm: ReporteVM,

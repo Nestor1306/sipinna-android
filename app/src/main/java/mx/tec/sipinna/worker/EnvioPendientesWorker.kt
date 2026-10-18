@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — EnvioPendientesWorker.kt
+ * Capa: Worker (trabajo en segundo plano con WorkManager)
+ *
+ * Envía en segundo plano los reportes guardados sin internet en cuanto vuelve la conexión.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-14
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.worker
 
 import android.content.Context
@@ -18,9 +30,11 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 import mx.tec.sipinna.data.Cifrado
 
-// Envía los reportes que se guardaron sin internet.
-// WorkManager lo ejecuta en cuanto hay conexión, aunque la app esté cerrada,
-// y lo vuelve a intentar más tarde si algo falla.
+/**
+ * Envía los reportes que se guardaron sin internet.
+ * WorkManager lo ejecuta en cuanto hay conexión, aunque la app esté cerrada,
+ * y lo vuelve a intentar más tarde si algo falla.
+ */
 class EnvioPendientesWorker(contexto: Context, parametros: WorkerParameters) :
     CoroutineWorker(contexto, parametros) {
 
@@ -65,7 +79,7 @@ class EnvioPendientesWorker(contexto: Context, parametros: WorkerParameters) :
         const val NOMBRE = "enviar-reportes-pendientes"
         private const val MAX_INTENTOS = 5
 
-        // Pide a Android que ejecute el envío cuando haya internet
+        /** Pide a Android que ejecute el envío cuando haya internet */
         fun programar(contexto: Context) {
             val peticion = OneTimeWorkRequestBuilder<EnvioPendientesWorker>()
                 .setConstraints(

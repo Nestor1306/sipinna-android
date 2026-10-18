@@ -1,3 +1,15 @@
+/*
+ * SIPINNA — ReportesPendientes.kt
+ * Capa: Data (almacenamiento local en el teléfono)
+ *
+ * Reportes creados sin internet: se guardan en la carpeta privada de la app hasta enviarse.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ * Creado: 2026-10-14
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.data
 
 import android.content.Context
@@ -6,9 +18,11 @@ import com.google.gson.Gson
 import java.io.File
 import java.util.UUID
 
-// Un reporte que no se pudo enviar por falta de internet.
-// Se guarda dentro de la app (carpeta privada: otras apps no la pueden leer)
-// y EnvioPendientesWorker lo manda cuando vuelve la conexión.
+/**
+ * Un reporte que no se pudo enviar por falta de internet.
+ * Se guarda dentro de la app (carpeta privada: otras apps no la pueden leer)
+ * y EnvioPendientesWorker lo manda cuando vuelve la conexión.
+ */
 data class ReportePendiente(
     val id: String,
     val peticion: ReporteRequest,   // el mismo JSON del paso 1
@@ -17,7 +31,7 @@ data class ReportePendiente(
     val creadoEn: Long
 )
 
-// Cada reporte pendiente es una carpeta:  files/pendientes/<id>/reporte.json + foto1.jpg + foto2.jpg
+/** Cada reporte pendiente es una carpeta:  files/pendientes/<id>/reporte.json + foto1.jpg + foto2.jpg */
 object ReportesPendientes {
 
     private const val CARPETA = "pendientes"
@@ -26,8 +40,10 @@ object ReportesPendientes {
 
     private fun base(context: Context) = File(context.filesDir, CARPETA)
 
-    // Las fotos se copian a la app porque el permiso para leerlas de la galería
-    // puede perderse si la app se cierra antes de enviarlas
+    /**
+     * Las fotos se copian a la app porque el permiso para leerlas de la galería
+     * puede perderse si la app se cierra antes de enviarlas
+     */
     fun guardar(context: Context, peticion: ReporteRequest, fotos: List<ByteArray>, token: String): ReportePendiente {
         val id = UUID.randomUUID().toString()
         val carpeta = File(base(context), id).apply { mkdirs() }
@@ -45,7 +61,7 @@ object ReportesPendientes {
         return pendiente
     }
 
-    // Del más viejo al más nuevo, para enviarlos en el orden en que se hicieron
+    /** Del más viejo al más nuevo, para enviarlos en el orden en que se hicieron */
     fun listar(context: Context): List<ReportePendiente> {
         val carpetas = base(context).listFiles() ?: return emptyList()
         return carpetas.mapNotNull { carpeta ->
@@ -57,6 +73,10 @@ object ReportesPendientes {
         }.sortedBy { it.creadoEn }
     }
 
+    /**
+     * Borra un pendiente (su JSON y sus fotos) después de enviarlo.
+     * @param id identificador del pendiente.
+     */
     fun borrar(context: Context, id: String) {
         File(base(context), id).deleteRecursively()
     }

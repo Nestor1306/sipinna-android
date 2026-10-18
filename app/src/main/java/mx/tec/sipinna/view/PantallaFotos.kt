@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaFotos.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Paso 2 del reporte: fotos del lugar desde la cámara o la galería.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import android.net.Uri
@@ -35,6 +48,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import java.io.File
 
+/**
+ * Paso 2 del reporte: hasta [ReporteVM.MAX_FOTOS] fotos del lugar.
+ * Al tocar "+" pregunta si se usa la cámara o la galería.
+ * @param vm ViewModel del reporte (guarda las fotos elegidas).
+ * @param alRegresar regresa al paso anterior.
+ */
 @Composable
 fun PantallaFotos(
     vm: ReporteVM,
@@ -152,7 +171,7 @@ fun PantallaFotos(
     }
 }
 
-// Foto elegida con botón "x" para quitarla
+/** Foto elegida con botón "x" para quitarla */
 @Composable
 fun TarjetaFoto(uri: String, alQuitar: () -> Unit, modifier: Modifier = Modifier) {
     Box(
@@ -181,7 +200,7 @@ fun TarjetaFoto(uri: String, alQuitar: () -> Unit, modifier: Modifier = Modifier
     }
 }
 
-// Cuadro gris con ícono para agregar una foto
+/** Cuadro gris con ícono para agregar una foto */
 @Composable
 fun CuadroAgregarFoto(alPresionar: () -> Unit, modifier: Modifier = Modifier) {
     Box(
@@ -202,7 +221,7 @@ fun CuadroAgregarFoto(alPresionar: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 
-// Una opción del diálogo "Agregar foto" (ícono + texto, toda la fila se puede tocar)
+/** Una opción del diálogo "Agregar foto" (ícono + texto, toda la fila se puede tocar) */
 @Composable
 private fun OpcionOrigenFoto(icono: ImageVector, texto: String, alPresionar: () -> Unit) {
     Row(
@@ -219,14 +238,14 @@ private fun OpcionOrigenFoto(icono: ImageVector, texto: String, alPresionar: () 
     }
 }
 
-// Crea un archivo vacío en la caché de la app para que la cámara guarde ahí la foto
+/** Crea un archivo vacío en la caché de la app para que la cámara guarde ahí la foto */
 private fun nuevoArchivoParaFoto(contexto: Context): Uri {
     val carpeta = File(contexto.cacheDir, "fotos").apply { mkdirs() }
     val archivo = File(carpeta, "foto_${System.currentTimeMillis()}.jpg")
     return FileProvider.getUriForFile(contexto, "${contexto.packageName}.fotos", archivo)
 }
 
-// Borra el archivo de una foto de cámara que se canceló
+/** Borra el archivo de una foto de cámara que se canceló */
 private fun borrarFotoDeCamara(contexto: Context, uri: Uri) {
     runCatching { contexto.contentResolver.delete(uri, null, null) }
 }

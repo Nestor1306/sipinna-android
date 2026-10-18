@@ -1,3 +1,17 @@
+/*
+ * SIPINNA — ReporteVM.kt
+ * Capa: ViewModel (estado y lógica de las pantallas)
+ *
+ * Lógica del reporte: captura de los 5 pasos, envío en 4 pasos a la API, modo sin conexión,
+ * historial y detalle.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.viewmodel
 
 import android.app.Application
@@ -47,10 +61,11 @@ import kotlinx.coroutines.delay
 import mx.tec.sipinna.view.estadoPublico
 import mx.tec.sipinna.data.EstadosConocidos
 
-// Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería
+/** Es AndroidViewModel porque necesita el "application" para leer las fotos de la galería */
 class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     private val _estado = MutableStateFlow(EstadoReporte())
+    /** Estado que observan las pantallas del reporte y el Home. */
     val estado: StateFlow<EstadoReporte> = _estado
 
     companion object {
@@ -60,16 +75,18 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         const val MAX_FOTOS = 2              // el diseño permite hasta 2 fotos
         const val MAX_REFERENCIA = 300       // calle o punto de referencia
 
-        // Por ahora el backend solo acepta enviar (PUT /report/{id}/submit) reportes
-        // con al menos una foto subida, así que la pedimos. Si el backend cambia para
-        // permitir 0 fotos, basta con poner esto en false.
+        /**
+         * Por ahora el backend solo acepta enviar (PUT /report/{id}/submit) reportes
+         * con al menos una foto subida, así que la pedimos. Si el backend cambia para
+         * permitir 0 fotos, basta con poner esto en false.
+         */
         const val FOTO_OBLIGATORIA = false
         const val MIN_PALABRAS = 10          // mínimo de palabras en la descripción
         const val OPCION_NO_SE = "No sé"     // en tipo de trabajo, "No sé" no se combina con las demás
 
         const val LADO_MAXIMO_FOTO = 1600    // pixeles; las fotos se reducen antes de subirlas
 
-        // Opciones de "Información del NNA" (las mismas que la web de SIPINNA)
+        /** Opciones de "Información del NNA" (las mismas que la web de SIPINNA) */
         val OPCIONES_CANTIDAD = listOf("1", "2", "3", "4", "5 o más", "No sé")
         val OPCIONES_EDAD = listOf(
             "0 a 5 años", "6 a 11 años", "12 a 14 años", "15 a 17 años", "No sé"
@@ -80,18 +97,20 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             "Recolección de residuos", "Otra actividad", "No sé"
         )
 
-        // "5 o más" → 5, "No sé" → null (el backend lo entiende como desconocido)
+        /** "5 o más" → 5, "No sé" → null (el backend lo entiende como desconocido) */
         fun cantidadParaServidor(opcion: String): Int? = when (opcion) {
             "5 o más" -> 5
             "No sé", "" -> null
             else -> opcion.toIntOrNull()
         }
-        // Cuenta palabras separadas por espacios ("  hola   mundo " = 2)
+        /** Cuenta palabras separadas por espacios ("  hola   mundo " = 2) */
         fun contarPalabras(texto: String): Int =
             texto.trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
-        // Qué le falta al paso actual para poder avanzar ("" = está completo).
-        // Las pantallas lo usan para bloquear el botón "Siguiente".
+        /**
+         * Qué le falta al paso actual para poder avanzar ("" = está completo).
+         * Las pantallas lo usan para bloquear el botón "Siguiente".
+         */
         fun errorDelPaso(e: EstadoReporte): String = when (e.pasoActual) {
             1 -> if (e.direccion.isBlank() && e.latitud == 0.0) "Indica la ubicación del reporte" else ""
             2 -> if (FOTO_OBLIGATORIA && e.fotos.isEmpty()) "Agrega al menos una foto del lugar" else ""
@@ -111,10 +130,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             "Solo / Sola", "Con adultos", "Con otros niños", "Con familiares", "En situación de riesgo"
         )
     }
-    // Último token con el que se pidió el historial (para recargarlo al volver el internet)
+    /** Último token con el que se pidió el historial (para recargarlo al volver el internet) */
     private var ultimoToken = ""
 
-    // Android nos avisa en cuanto el teléfono pierde o recupera la red
+    /** Android nos avisa en cuanto el teléfono pierde o recupera la red */
     private val conectividad =
         application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -149,13 +168,13 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         super.onCleared()
     }
 
-    // ¿El teléfono tiene alguna red con internet (Wi-Fi o datos)?
+    /** ¿El teléfono tiene alguna red con internet (Wi-Fi o datos)? */
     private fun hayInternet(): Boolean {
         val capacidades = conectividad.getNetworkCapabilities(conectividad.activeNetwork) ?: return false
         return capacidades.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    // Se llama cada vez que cambia la red
+    /** Se llama cada vez que cambia la red */
     private fun cambioDeConexion(conInternet: Boolean) {
         viewModelScope.launch {
             val antes = _estado.value.sinInternet
@@ -176,18 +195,22 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     // --- Paso 1: Locación ---
 
+    /** Guarda la dirección escrita en el buscador. */
     fun actualizarDireccion(valor: String) {
         _estado.value = _estado.value.copy(direccion = valor)
     }
 
+    /** Guarda la calle o punto de referencia (máximo [MAX_REFERENCIA] caracteres). */
     fun actualizarReferencia(valor: String) {
         _estado.value = _estado.value.copy(referencia = valor.take(MAX_REFERENCIA))
     }
 
+    /** Guarda la ubicación del pin. */
     fun actualizarCoordenadas(lat: Double, lng: Double) {
         _estado.value = _estado.value.copy(latitud = lat, longitud = lng, buscandoUbicacion = false)
     }
 
+    /** Indica si se está obteniendo la ubicación actual (muestra el indicador). */
     fun actualizarBuscandoUbicacion(valor: Boolean) {
         _estado.value = _estado.value.copy(buscandoUbicacion = valor)
     }
@@ -195,7 +218,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     private var busquedaLugar: Job? = null
 
-    // Se llama cada vez que el usuario escribe en el campo de dirección
+    /** Se llama cada vez que el usuario escribe en el campo de dirección */
     fun buscarLugares(texto: String) {
         busquedaLugar?.cancel()
         if (texto.trim().length < 3) {
@@ -221,7 +244,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Tocó una sugerencia: mueve el pin ahí y llena la dirección
+    /** Tocó una sugerencia: mueve el pin ahí y llena la dirección */
     fun elegirLugar(lugar: LugarSugerido) {
         busquedaLugar?.cancel()
         _estado.value = _estado.value.copy(
@@ -232,6 +255,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /** Oculta la lista de sugerencias del buscador. */
     fun cerrarSugerencias() {
         busquedaLugar?.cancel()
         _estado.value = _estado.value.copy(sugerencias = emptyList())
@@ -239,30 +263,37 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     // --- Paso 2: Fotos ---
 
+    /** Agrega fotos (URIs de cámara o galería) sin repetir y sin pasar de [MAX_FOTOS]. */
     fun agregarFotos(uris: List<String>) {
         val nuevas = (_estado.value.fotos + uris).distinct().take(MAX_FOTOS)
         _estado.value = _estado.value.copy(fotos = nuevas)
     }
 
+    /** Quita una foto elegida. */
     fun quitarFoto(uri: String) {
         _estado.value = _estado.value.copy(fotos = _estado.value.fotos - uri)
     }
 
     // --- Paso 3: Información del niño ---
 
+    /** Guarda el rango de edad elegido. */
     fun seleccionarEdad(valor: String) {
         _estado.value = _estado.value.copy(edadNino = valor)
     }
+    /** Guarda cuántos NNA vio ("1"…"5 o más" o "No sé"). */
     fun seleccionarCantidad(valor: String) {
         _estado.value = _estado.value.copy(cantidadNinos = valor)
     }
 
+    /** Guarda si hay peligro inmediato. */
     fun seleccionarPeligro(valor: Boolean) {
         _estado.value = _estado.value.copy(peligroInmediato = valor)
     }
 
-    // Se pueden elegir varios: si ya estaba, se quita; si no, se agrega
-    // "No sé" va sola: al elegirla se quitan las demás, y al elegir otra se quita "No sé"
+    /**
+     * Se pueden elegir varios: si ya estaba, se quita; si no, se agrega
+     * "No sé" va sola: al elegirla se quitan las demás, y al elegir otra se quita "No sé"
+     */
     fun alternarTipoTrabajo(valor: String) {
         val actuales = _estado.value.tiposTrabajo
         val nuevos = when {
@@ -273,18 +304,20 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         _estado.value = _estado.value.copy(tiposTrabajo = nuevos)
     }
 
-    // Si se toca la opción ya elegida, se quita (la pregunta es opcional)
+    /** Si se toca la opción ya elegida, se quita (la pregunta es opcional) */
     fun seleccionarRiesgo(valor: String) {
         val actual = _estado.value.riesgo
         _estado.value = _estado.value.copy(riesgo = if (actual == valor) "" else valor)
     }
 
+    /** Guarda la condición en que se encuentra el NNA. */
     fun seleccionarCondicion(valor: String) {
         _estado.value = _estado.value.copy(condicion = valor)
     }
 
     // --- Paso 4: Descripción ---
 
+    /** Guarda la descripción escrita. */
     fun actualizarDescripcion(valor: String) {
         _estado.value = _estado.value.copy(descripcion = valor)
     }
@@ -299,6 +332,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     // --- Navegación entre pasos ---
 
+    /**
+     * Avanza al siguiente paso si el actual está completo (ver [errorDelPaso]).
+     * Si se estaba corrigiendo un paso desde la Confirmación, regresa a ella.
+     */
     fun siguientePaso() {
         val e = _estado.value
 
@@ -321,6 +358,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Regresa al paso anterior (o a la Confirmación si se estaba corrigiendo un paso). */
     fun pasoAnterior() {
         val e = _estado.value
         // La flecha también regresa a la Confirmación si se estaba editando un paso
@@ -336,7 +374,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // "Editar reporte" (abajo en la Confirmación): recorre todo desde el paso que se pida
+    /** "Editar reporte" (abajo en la Confirmación): recorre todo desde el paso que se pida */
     fun irAPaso(paso: Int) {
         _estado.value = sinProgresoDeEnvio(_estado.value).copy(
             pasoActual = paso.coerceIn(1, TOTAL_PASOS),
@@ -344,7 +382,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    // Botón "Editar" de una sección de la Confirmación: va a ese paso y al terminar regresa
+    /** Botón "Editar" de una sección de la Confirmación: va a ese paso y al terminar regresa */
     fun editarDesdeConfirmar(paso: Int) {
         _estado.value = sinProgresoDeEnvio(_estado.value).copy(
             pasoActual = paso.coerceIn(1, TOTAL_PASOS - 1),
@@ -352,10 +390,12 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    // Si el usuario regresa a editar después de un envío que falló a la mitad, el borrador
-    // que ya existe en el servidor tiene los datos viejos. Lo olvidamos para que el
-    // siguiente "Enviar" cree uno nuevo con los datos corregidos. (El borrador viejo se
-    // queda en DRAFT: no aparece en el historial ni lo analiza Jev.)
+    /**
+     * Si el usuario regresa a editar después de un envío que falló a la mitad, el borrador
+     * que ya existe en el servidor tiene los datos viejos. Lo olvidamos para que el
+     * siguiente "Enviar" cree uno nuevo con los datos corregidos. (El borrador viejo se
+     * queda en DRAFT: no aparece en el historial ni lo analiza Jev.)
+     */
     private fun sinProgresoDeEnvio(e: EstadoReporte): EstadoReporte {
         if (e.reporteIdBorrador.isBlank()) return e
         return e.copy(
@@ -375,6 +415,11 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
     // Cada paso que termina bien se guarda en el estado. Si algo falla, el usuario vuelve
     // a tocar "Enviar reporte" y se continúa desde el paso que falló, sin duplicar nada.
 
+    /**
+     * Envía el reporte en los 4 pasos descritos arriba. Sin internet, lo guarda en
+     * [ReportesPendientes] para que [EnvioPendientesWorker] lo mande después.
+     * @param token sesión del usuario; "" para enviarlo anónimo.
+     */
     fun enviar(token: String) {
         val e = _estado.value
         if (e.cargando) return   // evita enviar dos veces con doble toque
@@ -505,8 +550,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    // Guarda el reporte (con sus fotos ya reducidas) en el teléfono y le pide a
-    // WorkManager que lo envíe en cuanto haya conexión
+    /**
+     * Guarda el reporte (con sus fotos ya reducidas) en el teléfono y le pide a
+     * WorkManager que lo envíe en cuanto haya conexión
+     */
     private suspend fun guardarParaDespues(e: EstadoReporte, token: String) {
         val app = getApplication<Application>()
         _estado.value = _estado.value.copy(cargando = true, error = "", progresoEnvio = "Guardando reporte…")
@@ -537,7 +584,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Lee del teléfono los reportes que faltan por enviar (para mostrarlos en el Home)
+    /** Lee del teléfono los reportes que faltan por enviar (para mostrarlos en el Home) */
     fun refrescarPendientes() {
         viewModelScope.launch {
             val app = getApplication<Application>()
@@ -556,7 +603,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
             )
         }
     }
-    // Abre el detalle de un reporte guardado sin internet, con lo que hay en el teléfono
+    /** Abre el detalle de un reporte guardado sin internet, con lo que hay en el teléfono */
     fun abrirPendiente(idLocal: String) {
         _estado.value = _estado.value.copy(detalle = null, cargandoDetalle = true, errorDetalle = "")
 
@@ -602,8 +649,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Arma el JSON del paso 1. La dirección escrita y la condición no tienen columna en la
-    // base, así que van al final de la descripción para no perderlas.
+    /**
+     * Arma el JSON del paso 1. La dirección escrita y la condición no tienen columna en la
+     * base, así que van al final de la descripción para no perderlas.
+     */
     private fun armarPeticion(e: EstadoReporte): ReporteRequest {
         val partes = mutableListOf(e.descripcion.trim())
         if (e.direccion.isNotBlank()) partes += "Dirección: ${e.direccion.trim()}"
@@ -624,8 +673,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    // Deja el error en pantalla. El progreso (id del borrador, fotos ya subidas) se conserva,
-    // así que al volver a tocar "Enviar reporte" se continúa desde aquí.
+    /**
+     * Deja el error en pantalla. El progreso (id del borrador, fotos ya subidas) se conserva,
+     * así que al volver a tocar "Enviar reporte" se continúa desde aquí.
+     */
     private fun falloEnPaso(paso: Int, codigo: Int?, detalle: String?) {
         Log.e("SIPINNA", "Envío falló en el paso $paso ($codigo): $detalle")
 
@@ -642,8 +693,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    // Busca el folio del reporte que se acaba de enviar: entre los reportes ya enviados
-    // (no DRAFT) del usuario, el que tenga el consecutivo más alto (…-2026-000123).
+    /**
+     * Busca el folio del reporte que se acaba de enviar: entre los reportes ya enviados
+     * (no DRAFT) del usuario, el que tenga el consecutivo más alto (…-2026-000123).
+     */
     private suspend fun folioMasReciente(sesion: String): String {
         return try {
             val respuesta = RetrofitClient.api.misReportes(sesion)
@@ -662,8 +715,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         return folio?.substringAfterLast("-")?.toIntOrNull() ?: 0
     }
 
-    // Lee la foto de la galería, la hace más pequeña y la convierte a JPEG.
-    // Así se sube más rápido y el servidor siempre recibe el mismo formato.
+    /**
+     * Lee la foto de la galería, la hace más pequeña y la convierte a JPEG.
+     * Así se sube más rápido y el servidor siempre recibe el mismo formato.
+     */
     private suspend fun prepararFoto(uri: String): ByteArray? {
         val contexto = getApplication<Application>()
 
@@ -688,6 +743,11 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
 
     // --- Historial desde la base de datos ---
 
+    /**
+     * Pide los reportes del usuario (GET /report), guarda una copia para verlos sin internet
+     * y registra sus estados como vistos (para las notificaciones).
+     * @param token sesión del usuario; si está vacío (anónimo) no hace nada.
+     */
     fun cargarHistorial(token: String) {
         // Los anónimos no tienen historial
         if (token.isBlank()) return
@@ -750,8 +810,10 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Pide a la base de datos el detalle de un reporte (al tocar su tarjeta en el Home).
-    // Sin internet, muestra la copia guardada (o al menos lo que ya se ve en la tarjeta).
+    /**
+     * Pide a la base de datos el detalle de un reporte (al tocar su tarjeta en el Home).
+     * Sin internet, muestra la copia guardada (o al menos lo que ya se ve en la tarjeta).
+     */
     fun cargarDetalle(token: String, folio: String) {
         _estado.value = _estado.value.copy(
             detalle = null, cargandoDetalle = true, errorDetalle = "", detalleSinConexion = false
@@ -804,7 +866,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Arma un detalle mínimo con los datos de la tarjeta del historial
+    /** Arma un detalle mínimo con los datos de la tarjeta del historial */
     private fun detalleDesdeTarjeta(folio: String): ReporteDetalle? {
         val r = _estado.value.historial.firstOrNull { it.folio == folio } ?: return null
         return ReporteDetalle(
@@ -824,7 +886,7 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    // Al cerrar sesión se borra todo, para que otro usuario no vea estos reportes
+    /** Al cerrar sesión se borra todo, para que otro usuario no vea estos reportes */
     fun limpiarTodo() {
         ultimoToken = ""
         CacheHistorial.borrar(getApplication())
@@ -836,12 +898,15 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /** Oculta el mensaje de error. */
     fun cerrarError() {
         _estado.value = _estado.value.copy(error = "")
     }
 
-    // Limpia el formulario pero conserva el historial de reportes enviados.
-    // (Al volver al Home, el historial se vuelve a pedir a la base de datos.)
+    /**
+     * Limpia el formulario pero conserva el historial de reportes enviados.
+     * (Al volver al Home, el historial se vuelve a pedir a la base de datos.)
+     */
     fun nuevoReporte() {
         val e = _estado.value
         _estado.value = EstadoReporte(

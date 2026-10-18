@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaDescripcion.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Paso 4 del reporte: descripción y fecha/hora del avistamiento.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.layout.*
@@ -17,6 +30,11 @@ import mx.tec.sipinna.viewmodel.ReporteVM
 import androidx.compose.ui.Alignment
 import mx.tec.sipinna.ui.theme.VerdeConfirmado
 
+/**
+ * Paso 4 del reporte: descripción libre (mínimo de palabras) y fecha/hora del avistamiento.
+ * @param vm ViewModel del reporte.
+ * @param alRegresar regresa al paso anterior.
+ */
 @Composable
 fun PantallaDescripcion(
     vm: ReporteVM,

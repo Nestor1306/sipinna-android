@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — PantallaConfirmar.kt
+ * Capa: View (pantallas y componentes de Jetpack Compose)
+ *
+ * Paso 5 del reporte: resumen editable antes de enviar.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.view
 
 import androidx.compose.foundation.background
@@ -29,6 +42,13 @@ import androidx.compose.foundation.clickable
 import java.util.Calendar
 import java.util.TimeZone
 
+/**
+ * Paso 5 del reporte: resumen de todo lo capturado antes de enviarlo.
+ * Cada sección tiene un lápiz para regresar a corregir ese paso.
+ * @param vm ViewModel del reporte (lee el estado y envía).
+ * @param alRegresar regresa al paso anterior.
+ * @param alEnviar se llama al tocar "Enviar reporte".
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaConfirmar(
@@ -259,6 +279,7 @@ fun PantallaConfirmar(
 
 // --- Piezas de la pantalla de confirmación ---
 
+/** Tarjeta blanca con borde que agrupa una sección del resumen. */
 @Composable
 fun TarjetaResumen(contenido: @Composable ColumnScope.() -> Unit) {
     Card(
@@ -271,6 +292,10 @@ fun TarjetaResumen(contenido: @Composable ColumnScope.() -> Unit) {
     }
 }
 
+/**
+ * Encabezado de una sección del resumen.
+ * @param alEditar si no es null, muestra el lápiz que lleva a corregir ese paso.
+ */
 @Composable
 fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = null) {
     Row(
@@ -299,11 +324,13 @@ fun TituloSeccion(icono: ImageVector, texto: String, alEditar: (() -> Unit)? = n
     }
 }
 
+/** Texto pequeño gris que nombra un dato ("Edad aproximada"). */
 @Composable
 fun EtiquetaGris(texto: String) {
     Text(texto.uppercase(), fontSize = 11.sp, color = GrisTexto, letterSpacing = 0.5.sp)
 }
 
+/** Píldora que muestra una respuesta elegida. */
 @Composable
 fun ChipResumen(texto: String) {
     Box(
@@ -316,8 +343,10 @@ fun ChipResumen(texto: String) {
     }
 }
 
-// Calendario y luego reloj para elegir cuándo se vio la situación.
-// No deja elegir días futuros; si la hora queda en el futuro, el ViewModel lo rechaza.
+/**
+ * Calendario y luego reloj para elegir cuándo se vio la situación.
+ * No deja elegir días futuros; si la hora queda en el futuro, el ViewModel lo rechaza.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectorFechaHora(

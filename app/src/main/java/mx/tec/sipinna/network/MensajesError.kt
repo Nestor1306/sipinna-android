@@ -1,3 +1,16 @@
+/*
+ * SIPINNA — MensajesError.kt
+ * Capa: Network (comunicación con el backend)
+ *
+ * Convierte errores de red y del servidor en mensajes claros para el usuario.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-22
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.network
 
 import android.util.Log
@@ -8,7 +21,7 @@ import java.io.IOException
 // El detalle técnico no se muestra en pantalla; se manda a Logcat (etiqueta "SIPINNA")
 // para que el equipo lo pueda revisar en Android Studio.
 
-// Cuando la llamada ni siquiera llegó al servidor (sin internet, servidor apagado, etc.)
+/** Cuando la llamada ni siquiera llegó al servidor (sin internet, servidor apagado, etc.) */
 fun mensajeDeExcepcion(e: Exception): String {
     Log.e("SIPINNA", "Error en la llamada al servidor", e)
 
@@ -19,7 +32,7 @@ fun mensajeDeExcepcion(e: Exception): String {
     }
 }
 
-// Cuando el servidor sí respondió, pero con un código de error (400, 401, 500...)
+/** Cuando el servidor sí respondió, pero con un código de error (400, 401, 500...) */
 fun mensajeDeRespuesta(codigo: Int, cuerpo: String?): String {
     Log.e("SIPINNA", "El servidor respondió $codigo: $cuerpo")
 

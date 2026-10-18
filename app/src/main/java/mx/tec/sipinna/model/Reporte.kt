@@ -1,11 +1,26 @@
+/*
+ * SIPINNA — Reporte.kt
+ * Capa: Model (estructuras de datos que viajan entre la app y el servidor)
+ *
+ * Peticiones y respuestas del flujo de reportes: crear, subir fotos, historial y detalle.
+ *
+ * Autores (según el historial de git):
+ *   - Ángel Jesús Solorio García
+ *   - Néstor Daniel Huidobro Aguilar
+ * Creado: 2026-09-13
+ * Proyecto: Integración de seguridad informática en redes y sistemas de software
+ *            Tecnológico de Monterrey, AGO–DIC 2026
+ */
 package mx.tec.sipinna.model
 
 import com.google.gson.annotations.SerializedName
 
-// Lo que enviamos al servidor (POST /report).
-// Los nombres coinciden con el JSON que espera el backend (en inglés).
-// La dirección escrita y la condición del niño no tienen columna en la base,
-// por eso ReporteVM las agrega al final de "description".
+/**
+ * Lo que enviamos al servidor (POST /report).
+ * Los nombres coinciden con el JSON que espera el backend (en inglés).
+ * La dirección escrita y la condición del niño no tienen columna en la base,
+ * por eso ReporteVM las agrega al final de "description".
+ */
 data class ReporteRequest(
     val description: String,
     val latitude: Double,
@@ -19,11 +34,13 @@ data class ReporteRequest(
     val reference: String? = null           // calle o punto de referencia (null = vacío, no se manda)
 )
 
-// Paso 1: respuesta de POST /report
-// {"reporte_id": "...", "folio": "RIETI-...", "clave_consulta": "...", "edit_token": "..."}
-// - folio: el que se muestra al usuario (el reporte todavía es DRAFT hasta el paso 4)
-// - clave_consulta: junto con el folio, permite consultar el estado sin cuenta
-// - edit_token: solo si es anónimo; autoriza los pasos 2 a 4 (no se le muestra al usuario)
+/**
+ * Paso 1: respuesta de POST /report
+ * {"reporte_id": "...", "folio": "RIETI-...", "clave_consulta": "...", "edit_token": "..."}
+ * - folio: el que se muestra al usuario (el reporte todavía es DRAFT hasta el paso 4)
+ * - clave_consulta: junto con el folio, permite consultar el estado sin cuenta
+ * - edit_token: solo si es anónimo; autoriza los pasos 2 a 4 (no se le muestra al usuario)
+ */
 data class BorradorCreado(
     @SerializedName("reporte_id") val reporteId: String?,
     @SerializedName("folio") val folio: String?,
@@ -31,36 +48,45 @@ data class BorradorCreado(
     @SerializedName("edit_token") val tokenEdicion: String?
 )
 
-// Paso 2: lo que mandamos a POST /report/{id}/images
-// {"images": [{"file_name": "foto1.jpg", "content_type": "image/jpeg"}, ...]}
+/**
+ * Paso 2: lo que mandamos a POST /report/{id}/images
+ * {"images": [{"file_name": "foto1.jpg", "content_type": "image/jpeg"}, ...]}
+ */
 data class RegistroImagenesRequest(
     @SerializedName("images") val imagenes: List<ImagenPorSubir>
 )
 
+/**
+ * Una foto que se va a subir en el paso 2 del envío.
+ * @property nombreArchivo nombre con el que se registra ("foto1.jpg").
+ * @property tipo tipo MIME; la app siempre manda "image/jpeg".
+ */
 data class ImagenPorSubir(
     @SerializedName("file_name") val nombreArchivo: String,
     @SerializedName("content_type") val tipo: String
 )
 
-// Paso 2: respuesta → {"success": ["id-foto-1", "id-foto-2"]} (mismo orden que enviamos)
+/** Paso 2: respuesta → {"success": ["id-foto-1", "id-foto-2"]} (mismo orden que enviamos) */
 data class ImagenesRegistradas(
     @SerializedName("success") val ids: List<String>?
 )
 
-// Paso 3: respuesta de PUT /report/{id}/images/{image_id}
-// {"success": true, "status": "uploaded" | "already_uploaded" | ..., "image_id": "...", "message": "..."}
+/**
+ * Paso 3: respuesta de PUT /report/{id}/images/{image_id}
+ * {"success": true, "status": "uploaded" | "already_uploaded" | ..., "image_id": "...", "message": "..."}
+ */
 data class RespuestaSubidaImagen(
     val success: Boolean?,
     val status: String?,
     val message: String?
 )
 
-// Lo que devuelve GET /report: {"reports": [ ... ]}
+/** Lo que devuelve GET /report: {"reports": [ ... ]} */
 data class RespuestaMisReportes(
     val reports: List<ReporteResumen>?
 )
 
-// Resumen de cada reporte, para las tarjetas del Home
+/** Resumen de cada reporte, para las tarjetas del Home */
 data class ReporteResumen(
     val folio: String?,
     val report_state: String?,   // "DRAFT", "registrado", "en_revision", "canalizado"...
@@ -70,12 +96,12 @@ data class ReporteResumen(
     val idLocal: String? = null  // solo los pendientes (guardados en el teléfono) lo tienen
 )
 
-// Lo que devuelve GET /report/{folio}: {"report": { ... }}
+/** Lo que devuelve GET /report/{folio}: {"report": { ... }} */
 data class RespuestaDetalle(
     val report: ReporteDetalle?
 )
 
-// Detalle completo de un reporte, tal como está en la base de datos
+/** Detalle completo de un reporte, tal como está en la base de datos */
 data class ReporteDetalle(
     val folio: String?,
     val description: String?,        // incluye al final "Dirección: ..." y "Condición: ..."
