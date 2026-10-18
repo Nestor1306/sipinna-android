@@ -270,17 +270,19 @@ fun PantallaHome(
         )
 
         // Abajo a la derecha: botón para hacer un reporte nuevo
-        ExtendedFloatingActionButton(
+        // Abajo a la derecha: botón para hacer un reporte nuevo (solo el +)
+        FloatingActionButton(
             onClick = alHacerReporte,
-            containerColor = AzulBoton,      // o Teal, para que combine con el resto de la app
+            containerColor = AzulBoton,
             contentColor = Color.White,
-            shape = RoundedCornerShape(32.dp),
-            icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(26.dp)) },
-            text = { Text("Hacer reporte", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) },
+            shape = RoundedCornerShape(50),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 24.dp)
-            )
+                .size(64.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Hacer reporte", modifier = Modifier.size(32.dp))
+        }
         }
     }
 
