@@ -15,3 +15,7 @@
 .cxx
 local.properties
 app/src/main/res/values/mapbox_access_token.xml
+# APK firmado y llave de firma: nunca al repo
+app/release/
+*.jks
+*.keystore
