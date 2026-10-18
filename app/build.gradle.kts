@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.sipinnaapp"
+    namespace = "mx.tec.sipinna"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.sipinnaapp"
+        applicationId = "mx.tec.sipinna"
         minSdk = 27
         targetSdk = 37
         versionCode = 1
