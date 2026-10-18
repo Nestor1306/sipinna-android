@@ -251,7 +251,7 @@ fun PantallaHome(
                 ) {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(15.dp),
-                        contentPadding = PaddingValues(bottom = 210.dp),   // para que la última tarjeta no quede tapada por los botones
+                        contentPadding = PaddingValues(bottom = 140.dp),   // para que la última tarjeta no quede tapada por los botones
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(reportesFiltrados) { reporte ->
@@ -262,28 +262,27 @@ fun PantallaHome(
             }
         }
 
-        // Abajo a la derecha: SIPINNITO (WhatsApp y llamada) y el botón para hacer un reporte
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+        // Abajo a la izquierda: SIPINNITO (WhatsApp y llamada), solo íconos
+        BotonesAsistente(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 24.dp, bottom = 24.dp)
+        )
+
+        // Abajo a la derecha: botón para hacer un reporte nuevo
+        ExtendedFloatingActionButton(
+            onClick = alHacerReporte,
+            containerColor = AzulBoton,      // o Teal, para que combine con el resto de la app
+            contentColor = Color.White,
+            shape = RoundedCornerShape(32.dp),
+            icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(26.dp)) },
+            text = { Text("Hacer reporte", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 24.dp)
-        ) {
-            BotonesAsistente(modifier = Modifier.padding(end = 8.dp))
-
-            // Botón para hacer un reporte nuevo, con texto para que se entienda
-            ExtendedFloatingActionButton(
-                onClick = alHacerReporte,
-                containerColor = AzulBoton,      // o Teal, para que combine con el resto de la app
-                contentColor = Color.White,
-                shape = RoundedCornerShape(32.dp),
-                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(26.dp)) },
-                text = { Text("Hacer reporte", fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
             )
         }
     }
-}
 
 // Pastilla gris con el ícono de filtro (a la derecha del buscador)
 @Composable

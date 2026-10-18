@@ -48,25 +48,22 @@ fun abrirWhatsAppSipinnito(contexto: Context) {
     }
 }
 
-// Los dos botones del asistente (WhatsApp y llamada), uno arriba del otro
+// Los dos botones del asistente (WhatsApp y llamada), uno arriba del otro, solo con ícono
 @Composable
 fun BotonesAsistente(modifier: Modifier = Modifier) {
     val contexto = LocalContext.current
 
     Column(
-        horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
     ) {
         BotonAsistente(
-            texto = "WhatsApp",
             icono = Icons.AutoMirrored.Filled.Chat,
             fondo = VerdeWhatsApp,
             descripcion = "Escribir a SIPINNITO por WhatsApp",
             alPresionar = { abrirWhatsAppSipinnito(contexto) }
         )
         BotonAsistente(
-            texto = "Llamar",
             icono = Icons.Default.Call,
             fondo = Teal,
             descripcion = "Llamar a SIPINNITO",
@@ -75,38 +72,21 @@ fun BotonesAsistente(modifier: Modifier = Modifier) {
     }
 }
 
-// Etiqueta blanca a la izquierda + botón redondo con el ícono
+// Botón redondo con el ícono (la descripción la lee TalkBack)
 @Composable
 private fun BotonAsistente(
-    texto: String,
     icono: ImageVector,
     fondo: Color,
     descripcion: String,
     alPresionar: () -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            onClick = alPresionar,
-            shape = RoundedCornerShape(12.dp),
-            color = Color.White,
-            shadowElevation = 2.dp
-        ) {
-            Text(
-                text = texto,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextoPrincipal,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        SmallFloatingActionButton(
-            onClick = alPresionar,
-            containerColor = fondo,
-            contentColor = Color.White,
-            shape = RoundedCornerShape(50)
-        ) {
-            Icon(icono, contentDescription = descripcion, modifier = Modifier.size(22.dp))
-        }
+    FloatingActionButton(
+        onClick = alPresionar,
+        containerColor = fondo,
+        contentColor = Color.White,
+        shape = RoundedCornerShape(50),
+        modifier = Modifier.size(48.dp)
+    ) {
+        Icon(icono, contentDescription = descripcion, modifier = Modifier.size(24.dp))
     }
 }
