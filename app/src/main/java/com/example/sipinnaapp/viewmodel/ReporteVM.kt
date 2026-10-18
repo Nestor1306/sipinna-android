@@ -402,8 +402,9 @@ class ReporteVM(application: Application) : AndroidViewModel(application) {
                     _estado.value = _estado.value.copy(
                         reporteIdBorrador = reporteId,
                         tokenEdicion = llave,
-                        folioBorrador = respuesta.body()?.folio.orEmpty(),
-                        claveConsulta = respuesta.body()?.claveConsulta.orEmpty()
+                        folioBorrador = respuesta.body()?.folio.orEmpty()
+                        // La clave de consulta no se guarda ni se muestra: los reportes anónimos
+                        // no tienen seguimiento y los de cuenta se siguen desde el inicio.
                     )
                 }
                 val llave: String? = _estado.value.tokenEdicion.ifBlank { null }
