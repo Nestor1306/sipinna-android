@@ -1,5 +1,6 @@
 package com.example.sipinnaapp.view
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,9 @@ fun PantallaPerfil(
     alCerrarSesion: () -> Unit,
     // null = no se muestra (usuario anónimo). Recibe qué hacer si falla.
     alEliminarCuenta: ((alFallar: (String) -> Unit) -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // null = no se muestra el botón (anónimo, o falta conectar GET/PUT /account)
+    alEditarDatos: (() -> Unit)? = null
 ) {
     var dialogoEliminar by remember { mutableStateOf(false) }
     var confirmacion by remember { mutableStateOf("") }
@@ -147,6 +150,16 @@ fun PantallaPerfil(
             textAlign = TextAlign.Center,
             modifier = Modifier.width(188.dp)
         )
+
+        if (alEditarDatos != null) {
+            Espacio(16.dp)
+            OutlinedButton(
+                onClick = alEditarDatos,
+                border = BorderStroke(1.dp, Teal)
+            ) {
+                Text("Editar mis datos", color = Teal, fontSize = 14.sp)
+            }
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 

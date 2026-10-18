@@ -171,3 +171,24 @@ fun TituloPregunta(texto: String) {
         color = TextoPrincipal
     )
 }
+// Opciones de la pregunta de riesgo: valor que espera la API → texto en pantalla (igual que la web)
+val OPCIONES_RIESGO = listOf("si" to "Sí", "no" to "No", "no_se" to "No sé")
+
+// Pregunta "¿Observaste alguna situación de riesgo?". Es distinta de "peligro inmediato".
+// seleccion = "si", "no", "no_se" o "" si todavía no contesta.
+@Composable
+fun PreguntaRiesgo(numero: Int, seleccion: String, alElegir: (String) -> Unit) {
+    EtiquetaPregunta("Pregunta $numero")
+    Espacio(4.dp)
+    TituloPregunta("¿Observaste alguna situación de riesgo?")
+    Espacio(10.dp)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OPCIONES_RIESGO.forEach { (valor, texto) ->
+            ChipOpcion(
+                texto = texto,
+                seleccionado = seleccion == valor,
+                alPresionar = { alElegir(valor) }
+            )
+        }
+    }
+}

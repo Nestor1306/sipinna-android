@@ -1,10 +1,12 @@
 package com.example.sipinnaapp.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,8 +34,7 @@ fun PantallaReporteEnviado(
     modifier: Modifier = Modifier
 ) {
     val estado by vm.estado.collectAsState()
-    val portapapeles = LocalClipboardManager.current
-    val contexto = LocalContext.current
+    var mostrarInfo by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -49,9 +50,30 @@ fun PantallaReporteEnviado(
             IconButton(onClick = alCerrar, modifier = Modifier.offset(x = (-12).dp)) {
                 Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = TextoPrincipal, modifier = Modifier.size(28.dp))
             }
-            IconButton(onClick = { /* pendiente: info */ }) {
+            IconButton(onClick = { mostrarInfo = true }) {
                 Icon(Icons.Default.Info, contentDescription = "Información", tint = TextoPrincipal, modifier = Modifier.size(28.dp))
             }
+        }
+
+        // Qué pasa con el reporte después de enviarlo
+        if (mostrarInfo) {
+            AlertDialog(
+                onDismissRequest = { mostrarInfo = false },
+                title = { Text("¿Qué sigue?") },
+                text = {
+                    Text(
+                        text = "El personal de SIPINNA revisará tu reporte y le dará seguimiento. " +
+                            "Su estado puede ser: recibido, en revisión, canalizado, en atención o concluido.\n\n" +
+                            "Si tienes cuenta, lo verás en tu inicio. Si no, guarda tu folio y tu clave de consulta " +
+                            "para revisarlo en www.sipinna.com/consultar-folio.\n\n" +
+                            "Si una niña, niño o adolescente está en peligro en este momento, llama al 911.",
+                        fontSize = 13.sp
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { mostrarInfo = false }) { Text("Entendido", color = Teal) }
+                }
+            )
         }
 
         Text(
@@ -108,7 +130,19 @@ fun PantallaReporteEnviado(
                 )
             }
 
-            if (estado.enviadoAnonimo) {
+            // Clave de consulta: junto con el folio permite ver el estado del reporte sin cuenta
+            if (estado.claveConsulta.isNotBlank()) {
+                Espacio(6.dp)
+                Text("Clave de consulta:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextoPrincipal)
+                TextoCopiable(estado.claveConsulta, avisoCopiado = "Clave copiada")
+                Espacio(8.dp)
+                Text(
+                    text = "Guarda tu folio y tu clave: con ellos puedes ver cómo va tu reporte, aunque no tengas cuenta, en www.sipinna.com/consultar-folio.",
+                    fontSize = 12.sp,
+                    color = GrisTexto,
+                    textAlign = TextAlign.Center
+                )
+            } else if (estado.enviadoAnonimo) {
                 Espacio(8.dp)
                 Text(
                     text = "Como no iniciaste sesión, no podrás consultar su estado. Crea una cuenta si quieres darle seguimiento a tus próximos reportes.",
@@ -185,5 +219,33 @@ fun PantallaReporteEnviado(
         BotonPrincipal(texto = "Volver al inicio", alPresionar = alCerrar)
 
         Espacio(24.dp)
+    }
+}
+
+// Texto con un botón para copiarlo (la clave de consulta es larga, puede ocupar dos renglones)
+@Composable
+private fun TextoCopiable(texto: String, avisoCopiado: String) {
+    val portapapeles = LocalClipboardManager.current
+    val contexto = LocalContext.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .clickable {
+                portapapeles.setText(AnnotatedString(texto))
+                Toast.makeText(contexto, avisoCopiado, Toast.LENGTH_SHORT).show()
+            }
+            .padding(vertical = 2.dp)
+    ) {
+        Text(
+            text = texto,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextoPrincipal,
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        Spacer(Modifier.width(6.dp))
+        Icon(Icons.Default.ContentCopy, contentDescription = "Copiar", tint = Teal, modifier = Modifier.size(16.dp))
     }
 }

@@ -398,3 +398,15 @@ fun PantallaLocacion(
         Espacio(24.dp)
     }
 }
+// Campo opcional "Calle o punto de referencia" (igual que la web). Se manda aparte,
+// en "reference", y ya no dentro de la descripción. Máximo 300 caracteres.
+@Composable
+fun CampoReferencia(valor: String, alCambiar: (String) -> Unit) {
+    CampoConIcono(
+        etiqueta = "Calle o punto de referencia (opcional)",
+        valor = valor,
+        alCambiar = { alCambiar(it.take(300)) },
+        icono = Icons.Default.Place,
+        ayuda = "Ej. Semáforo frente a la tienda"
+    )
+}

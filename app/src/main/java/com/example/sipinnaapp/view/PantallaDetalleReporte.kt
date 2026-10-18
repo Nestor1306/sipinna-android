@@ -97,18 +97,22 @@ fun PantallaDetalleReporte(
                 }
             }
 
-            else -> ContenidoDetalle(detalle, sinConexion)
+            else -> ContenidoDetalle(detalle, sinConexion, alRecargarFotos = alReintentar)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
+private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean, alRecargarFotos: () -> Unit) {
     val info = infoDeEstado(detalle.last_state)
     val partes = separarDescripcion(detalle.description)
     val tokenMapbox = stringResource(R.string.mapbox_access_token)
     val enlacesFotos = detalle.images.orEmpty()
+
+    // Fotos que no se pudieron cargar. Los enlaces de S3 duran 15 minutos:
+    // al recargar el detalle llegan enlaces nuevos (y esta lista se reinicia).
+    var fotosConError by remember(enlacesFotos) { mutableStateOf(emptySet<String>()) }
 
     // Foto que se tocó para verla en grande (null = ninguna)
     var fotoAmpliada by remember { mutableStateOf<String?>(null) }
@@ -237,27 +241,50 @@ private fun ContenidoDetalle(detalle: ReporteDetalle, sinConexion: Boolean) {
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     enlacesFotos.forEach { enlace ->
+                        val fallo = enlace in fotosConError
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .size(100.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(SuperficieSecundaria)
-                                .clickable { fotoAmpliada = enlace }
+                                .clickable {
+                                    // Si no cargó, se vuelve a pedir el reporte (con enlaces nuevos)
+                                    if (fallo && !sinConexion) alRecargarFotos() else if (!fallo) fotoAmpliada = enlace
+                                }
                         ) {
-                            // Mientras carga (o si falla) se ve el ícono de fondo
-                            Icon(Icons.Default.AccountBox, contentDescription = null, tint = GrisTextoClaro)
-                            AsyncImage(
-                                model = enlace,
-                                contentDescription = "Foto del reporte",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            if (fallo) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Teal)
+                                    Text(
+                                        text = if (sinConexion) "Sin conexión" else "Toca para\nrecargar",
+                                        fontSize = 11.sp,
+                                        color = GrisTexto,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 13.sp
+                                    )
+                                }
+                            } else {
+                                // Mientras carga se ve el ícono de fondo
+                                Icon(Icons.Default.AccountBox, contentDescription = null, tint = GrisTextoClaro)
+                                AsyncImage(
+                                    model = enlace,
+                                    contentDescription = "Foto del reporte",
+                                    contentScale = ContentScale.Crop,
+                                    onError = { fotosConError = fotosConError + enlace },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
                 Espacio(6.dp)
-                Text("Toca una foto para verla completa", fontSize = 12.sp, color = GrisTexto)
+                Text(
+                    text = if (fotosConError.isEmpty()) "Toca una foto para verla completa"
+                    else "Las fotos se pueden ver durante 15 minutos. Toca la foto para recargarla.",
+                    fontSize = 12.sp,
+                    color = GrisTexto
+                )
             }
         }
 
@@ -356,7 +383,7 @@ private fun separarDescripcion(descripcion: String?): PartesDescripcion {
 }
 
 // "2026-10-02T19:05:31.12Z" o "2026-10-02T19:00" → "2 oct 2026 · 13:05" (hora local)
-private fun fechaLegible(valor: String?): String {
+fun fechaLegible(valor: String?): String {
     if (valor.isNullOrBlank()) return "—"
     val formato = DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm", Locale("es", "MX"))
     return try {
